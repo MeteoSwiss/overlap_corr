@@ -17,7 +17,7 @@ info.tub='TUB120011';
 station='pay';
 
 use_local_data = 0;%{0,1};
-corrections_to_analyze = 'good_enough';%{'all','good_enough','well_trusted'};
+corrections_to_analyze = 'all';%{'all','good_enough','well_trusted'};
 
 if use_local_data
     folder_corrections='C:\AllData\SharedData_Maxime\py\';
@@ -65,7 +65,6 @@ overlap_cor0 = [];
 temp_mean0 = [];
 voltage_PM_mean0 = [];
 for t=1:length(time_vec)
-
     file=['result_ovp_fc_' info.chm info.tub '_' datestr(time_vec(t),'yyyymmdd') '.mat'];
     folder_day=[folder_corrections datestr(time_vec(t),'yyyy/mm/')];
     
@@ -143,15 +142,15 @@ end
 list = dir([folder_ov_ref,info.tub,'_*.cfg']);
 if isempty(list)
     error('missing overlap function');
-    overlap_ref = NaN(1024,1);
 else
-    %file='M:\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\overlap_ref_TUB120011_20121112_1024.cfg';
     file=[folder_ov_ref list(1).name];
     fid=fopen(file);
     disp(file);
     data=textscan(fid,'%f','delimiter','\t','headerlines',1);
     overlap_ref=data{1};
 end
+
+save all_correction.mat
 
 %% select set of overlap functions to analyse
 
@@ -272,30 +271,30 @@ ov_cor = overlap_cor;
 ov = overlap_ref;
 disp_text = false;
 
-a = T-273.15;
+A = T-273.15;
 %l2-norm
-b = 100*sqrt(trapz(abs(ov_cor'-repmat(ov,1,length(ti))).^2)) ./ sqrt(trapz(abs(repmat(ov,1,length(ti))).^2));
+B = 100*sqrt(trapz(abs(ov_cor'-repmat(ov,1,length(ti))).^2)) ./ sqrt(trapz(abs(repmat(ov,1,length(ti))).^2));
 %linf-norm
-% b = 100*max(abs(ov_cor'-repmat(ov,1,length(ti))),[],1) ./ max(abs(repmat(ov,1,length(ti))),[],1);
+% B = 100*max(abs(ov_cor'-repmat(ov,1,length(ti))),[],1) ./ max(abs(repmat(ov,1,length(ti))),[],1);
 
 
-p = polyfit(a,b,1);
+p = polyfit(A,B,1);
 
-SStot = sum((b'-repmat(mean(b),length(b),1)).^2);
-SSres = sum((b'-polyval(p,a')).^2);
+SStot = sum((B'-repmat(mean(B),length(B),1)).^2);
+SSres = sum((B'-polyval(p,A')).^2);
 R2 = 1-SSres/SStot;
-RMSE = sqrt(SSres/length(a));
-RMSErel = 100*RMSE / sqrt(sum(polyval(p,a').^2)/length(a));
+RMSE = sqrt(SSres/length(A));
+RMSErel = 100*RMSE / sqrt(sum(polyval(p,A').^2)/length(A));
 % disp(['Rsquared of the fit: ' num2str(R2)])
 % disp(['RMSE of the fit: ' num2str(RMSE)])
 
 fz = 18;
 hf=figure('Units','Normalized','Position',[0 0 1 1],'Visible','on');
-scatter(a,b,'filled');% scatter(a,b,36,jet(length(a)),'filled')
+scatter(A,B,'filled');% scatter(A,B,36,jet(length(A)),'filled')
 if disp_text
     hold on;
     for j=1:length(ti)
-        text(a(j),b(j),datestr(ti(j),'dd.mm.yyyy HH:MM'),'HorizontalAlignment','center','FontSize',8);
+        text(A(j),B(j),datestr(ti(j),'dd.mm.yyyy HH:MM'),'HorizontalAlignment','center','FontSize',8);
     end
 end
 xlim([15 40]);
@@ -326,10 +325,10 @@ set(gcf,'PaperPositionMode','auto');
 
 %% Plots function of time 3D
 ov = overlap_ref;
-[X,Y] = meshgrid(time-datenum(2000,1,1),x);
+[X,Y] = meshgrid(time-datenum(2000,1,1),double(range));
 
 figure;
-surf(X,Y,overlap_cor'-repmat(ov,1,length(time)),repmat(temp_mean-273.15,length(x),1));
+surf(X,Y,overlap_cor'-repmat(ov,1,length(time)),repmat(temp_mean-273.15,length(range),1));
 % surf(X,Y,overlap_cor',repmat(temp_mean-273.15,length(x),1));
 hold on
 
@@ -338,12 +337,20 @@ OV_350_interped=interp1(time,Ov_350,floor(min(time)):max(time));
 OV_350_smoothed=smooth(floor(min(time)):max(time),OV_350_interped,90);
 plot3((floor(min(time)):max(time))-datenum(2000,1,1),350*ones(size(floor(min(time)):max(time))),OV_350_smoothed,'r','linewidth',2)
 
-colorbar;
+hc = colorbar;
+% ylabel(hc,'mean interior T during the day [°C]');
+ylabel(hc,'median interior T during calculation of overlap correction [°C]');
+colormap(jet);
+caxis([15 40])
 ylim([0 1200])
+set(gca,'ytick',0:200:1200);
+box on;grid on;
 xlabel('Day')
 ylabel('Range [m]')
 zlabel('ov\_corrected - ov\_manufacturer');
 datetick('x','mm/yy')
+
+
 
 %% plot at 4 altitudes
 altitudes = [250,350,450,550,650];
@@ -793,7 +800,7 @@ caxis([15 40]);
 %% Load test data
 
 % date = '20130417';
-date = '20140614';
+date = '20140616';
 
 [chm,chminfo] = get_chm15k_from_files('pay',[date,'000000'],datestr(datenum(date,'yyyymmdd')+1,'yyyymmddHHMMSS'),folder_ncdata);
 % [chm,chminfo]=readcorrectlyncfile3('pay',date,folder_ncdata);
@@ -815,6 +822,22 @@ end
 figure;
 plot(chm.time,chm.temp_int-273.15);datetick;ylim([15 40]);box on;grid on;
 xlabel('Time [UT]');ylabel('Internal Temperature [°C]');title(['pay ' date]);
+
+
+
+file=['result_ovp_fc_' info.chm info.tub '_' date '.mat'];
+folder_day=[folder_corrections datestr(datenum(date,'yyyymmdd'),'yyyy/mm/')];  
+if exist([folder_day file],'file')>0
+    disp([folder_day file]);    
+    load([folder_day file],'result');
+    if ~isempty(result.index_final) && length(result.index_final)>=min_nb_good_samples_after_outliers_removal
+        time_start = result.time_start(result.index_final);
+        time_end = result.time_end(result.index_final);
+        range_start = result.range_start(result.index_final);
+        range_end = result.range_end(result.index_final);
+    end
+else warning('No file')
+end
 
 %% calculate RCS and grad(RCS) with the model
 
@@ -859,13 +882,13 @@ list_legends = {};
 hold on;
 list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
 list_legends{end+1} = 'clouds';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'.k');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'ok');
 list_legends{end+1} = '1. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'.g');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'>g');
 list_legends{end+1} = '2. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'.y');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'<b');
 list_legends{end+1} = '3. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'.r');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'+r');
 list_legends{end+1} = 'min. gradient';
 legend(list_plots,list_legends,'location','eastoutside');
 ylim([0 2500]);
@@ -885,13 +908,13 @@ list_legends = {};
 hold on;
 list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
 list_legends{end+1} = 'clouds';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'.k');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'ok');
 list_legends{end+1} = '1. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'.g');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'>g');
 list_legends{end+1} = '2. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'.y');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'<b');
 list_legends{end+1} = '3. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'.r');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'+r');
 list_legends{end+1} = 'min. gradient';
 legend(list_plots,list_legends,'location','eastoutside');
 ylim([0 2500]);
@@ -911,13 +934,13 @@ list_legends = {};
 hold on;
 list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
 list_legends{end+1} = 'clouds';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'.k');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'ok');
 list_legends{end+1} = '1. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'.g');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'>g');
 list_legends{end+1} = '2. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'.y');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'<b');
 list_legends{end+1} = '3. strongest gradient';
-list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'.r');
+list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'+r');
 list_legends{end+1} = 'min. gradient';
 legend(list_plots,list_legends,'location','eastoutside');
 ylim([0 2500]);
@@ -955,7 +978,7 @@ for k=1:length(RCS_list)
     clims_grad = [-1000 1000];
     % load('ypcmap2','cmap');
     
-    figure
+    figure('Units','normalized','Position',[0.005 0.05 0.99 0.85],'Name',[ 'Pcolor ' correction_type_list{k}])
     
     handles.axes_pcolor_RCS = subplot(2,1,1);
     handles.surface_pcolor_RCS = pcolor(chm.time-offset,chm.range,log10(abs(RCS)));
@@ -995,6 +1018,56 @@ for k=1:length(RCS_list)
         list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime-offset,gradients(1,:),'.r','MarkerSize',16);
         list_legends{end+1} = 'min. gradient';
     end
+    % add area where the overlap function
+    unique_time_start=unique(time_start);
+    unique_time_end=unique(time_end);
+    
+    hold on
+    range_start_min=NaN(size(unique_time_start));
+    range_start_max=NaN(size(unique_time_start));
+    
+    % find areas where it the overlap function was calculated
+    for i=1:length(unique_time_start)
+        index=time_start==unique_time_start(i);
+        if any(index)
+            range_start_min(i)=min(range_start(index));
+            range_start_max(i)=max(range_end(index));
+        end
+%         plot([unique_time_start(i)  unique_time_end(i)]-offset,repmat(range_start_min(i),2,1),'--k')
+%         plot([unique_time_start(i)  unique_time_end(i)]-offset,repmat(range_start_max(i),2,1),'--k')
+%         plot([unique_time_start(i)  unique_time_start(i)]-offset,[range_start_min(i) range_start_max(i)],'--k')
+%         plot([unique_time_end(i)  unique_time_end(i)]-offset,[range_start_min(i) range_start_max(i)],'--k')
+    end
+    
+    % plot these areas without overlaping lines
+    range_start_min_all=NaN(size(chm.time));
+    range_start_max_all=NaN(size(chm.time));
+    for i=1:length(chm.time)
+        index=chm.time(i)>=unique_time_start & chm.time(i)<unique_time_end;
+        if any(index)
+            range_start_min_all(i)=min(range_start_min(index));
+            range_start_max_all(i)=max(range_start_max(index));
+        end
+    end
+    plot(chm.time-offset,range_start_min_all,'--k')
+    list_plots(end+1)=plot(chm.time-offset,range_start_max_all,'--k');
+    list_legends{end+1} = 'Ref. box';
+
+    %Vertical bar if there is a new box    
+    for i=2:length(chm.time)
+        if ~isnan(range_start_min_all(i)) && isnan(range_start_min_all(i-1))
+            plot([chm.time(i)  chm.time(i)]-offset,[range_start_min_all(i) range_start_max_all(i)],'--k')
+        end
+    end
+    
+    %Vertical bar if there is a box is ending
+    for i=1:length(chm.time)-1
+        if ~isnan(range_start_min_all(i)) && isnan(range_start_min_all(i+1))
+            plot([chm.time(i)  chm.time(i)]-offset,[range_start_min_all(i) range_start_max_all(i)],'--k')
+        end
+    end
+    
+    % Plot Clouds
     if(disp_clouds)
         for j=1:3
             cbh = chm.cbh(j,:);
@@ -1010,6 +1083,9 @@ for k=1:length(RCS_list)
     set(gca,'FontSize',fz);
     
     title(title_str,'FontSize',fz);
+    
+    
+   
     
     handles.axes_pcolor_grad = subplot(2,1,2);
     handles.surface_pcolor_grad = pcolor(chm.time-offset,chm.range,grad);
