@@ -1,5 +1,5 @@
 %Read Overlap Corrections
-clear variables;pack;clc;close all;
+clear variables;clc;close all;
 
 
 %% INPUTS
@@ -17,7 +17,7 @@ info.tub='TUB120011';
 station='pay';
 
 use_local_data = 0;%{0,1};
-corrections_to_analyze = 'all';%{'all','good_enough','well_trusted'};
+corrections_to_analyze = 'good_enough';%{'all','good_enough','well_trusted'};
 
 if use_local_data
     folder_corrections='C:\AllData\SharedData_Maxime\py\';
@@ -146,7 +146,7 @@ if isempty(list)
     overlap_ref = NaN(1024,1);
 else
     %file='M:\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\overlap_ref_TUB120011_20121112_1024.cfg';
-    file=list(1).name;
+    file=[folder_ov_ref list(1).name];
     fid=fopen(file);
     disp(file);
     data=textscan(fid,'%f','delimiter','\t','headerlines',1);
@@ -206,7 +206,7 @@ T = temp_mean-273.15;
 Treduced = (T-min(T))/(max(T)-min(T))*(length(jet)-1)+1;
 RGB = interp1(1:length(jet),jet,Treduced);
 
-set(gcf,'DefaultAxesColorOrder',RGB)
+% set(gcf,'defaultAxesColorOrder',RGB)
 
 hold on
 
@@ -214,7 +214,8 @@ relative_difference=NaN(length(time),length(range));
 for i=1:length(time)
     relative_difference(i,:)=(-1./overlap_ref'+1./overlap_cor(i,:))./(1./overlap_ref')*100;
     h=scatter(relative_difference(i,:),range,...
-        ones(size(overlap_cor(i,:)))*12,repmat(temp_mean(i)-273.15,size(overlap_cor(i,:))),...
+        ones(size(overlap_cor(i,:)))*12,...
+        repmat(temp_mean(i)-273.15,size(overlap_cor(i,:))),...
         'filled','displayname',datestr(time(i)));
     hp = plot(relative_difference(i,:),range,'displayname',datestr(time(i)));
     
@@ -241,7 +242,7 @@ T = temp_mean-273.15;
 Treduced = (T-min(T))/(max(T)-min(T))*(length(jet)-1)+1;
 RGB = interp1(1:length(jet),jet,Treduced);
 
-set(gcf,'DefaultAxesColorOrder',RGB)
+% set(gcf,'DefaultAxesColorOrder',RGB)
 
 hold on;
 for i=1:length(time)
