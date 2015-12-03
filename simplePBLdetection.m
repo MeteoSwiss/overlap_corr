@@ -9,16 +9,15 @@ if nargin==3
 end
 
 %% Inputs
-alpha = 2.5e-16;
-SNRlim = 1.96;
-xtime = 0:10/60/24:1;
-maxR = 2500;
+alpha = 2.5e-16;    % Stable range correction according to Thikonov
+SNRlim = 3;      % Signal to noise ratio (1.96  =>incules 95% of data in a gaussian)
+time_resolution= 10;% in Min 
+maxR = 2500;        % Maximum range for PBL detection
 
-threshold1=0.975;
-threshold2=0.75;
+threshold1 = 0.975; % Minimal gradient strength to be considered(in 1- %/100)
+threshold2 = 0.80;  % Maximal gradient strength ( in 1-%100)
 
 %% Processing
-
 chm.signal_raw_per_pulse = chm.beta_raw .* repmat(overlap_ref,1,size(chm.beta_raw,2)) ./ repmat(chm.range.^2,1,size(chm.beta_raw,2)) .* (chm.scaling*repmat(chm.p_calc',size(chm.beta_raw,1),1)) + repmat(chm.base',size(chm.beta_raw,1),1);
 
 p = polyfit(sqrt(chm.base),chm.stddev,1);
@@ -63,6 +62,8 @@ end
 
 minR = chm.range(find(overlap_ref>=0.1,1,'first'));
 is_bad_weather = chm.sci~=0;
+xtime = 0:time_resolution/60/24:1; % Temporal vector
+
 gradients = NaN(5,length(xtime));
 
 if do_plot
@@ -96,7 +97,8 @@ for j=1:length(xtime)-1
    [~,grad_profile,~] = sgolay_smooth(chm.range(1:find(chm.range<=maxR+5*chm.range_gate,1,'last')),profile(1:find(chm.range<=maxR+5*chm.range_gate,1,'last')),11,2);
    
    grad_profile_u = -grad_profile;grad_profile_u = grad_profile_u + nanmax(abs(grad_profile_u));grad_profile_u = grad_profile_u(~isnan(grad_profile_u));
-   u = invariant_probability_distribution_silagadze(grad_profile_u,5);u = [NaN(5,1);u;NaN(5,1)];
+   u = invariant_probability_distribution_silagadze(grad_profile_u,5);
+   u = [NaN(5,1);u;NaN(5,1)];
    
 %    u = -grad_profile;
 
