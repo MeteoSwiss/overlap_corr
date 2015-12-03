@@ -8,6 +8,17 @@ if nargin==3
    do_plot = 0; 
 end
 
+%% Inputs
+alpha = 2.5e-16;
+SNRlim = 1.96;
+xtime = 0:10/60/24:1;
+maxR = 2500;
+
+threshold1=0.975;
+threshold2=0.75;
+
+%% Processing
+
 chm.signal_raw_per_pulse = chm.beta_raw .* repmat(overlap_ref,1,size(chm.beta_raw,2)) ./ repmat(chm.range.^2,1,size(chm.beta_raw,2)) .* (chm.scaling*repmat(chm.p_calc',size(chm.beta_raw,1),1)) + repmat(chm.base',size(chm.beta_raw,1),1);
 
 p = polyfit(sqrt(chm.base),chm.stddev,1);
@@ -15,7 +26,6 @@ chm.noise_level = p(1) * sqrt(chm.signal_raw_per_pulse);
 chm.SNR = abs((chm.signal_raw_per_pulse - repmat(chm.base',size(chm.beta_raw,1),1))./chm.noise_level);
 
 A = sparse(diag(overlap_ref./chm.range.^2));
-alpha = 2.5e-16;
 chm.beta_raw_2 = (A'*A+alpha*speye(size(A)))\(A'*(chm.beta_raw .* repmat(overlap_ref,1,size(chm.beta_raw,2)) ./ repmat(chm.range.^2,1,size(chm.beta_raw,2))));
 chm.noise_level_2 = (A'*A+alpha*speye(size(A)))\(A'*(chm.noise_level ./ (chm.scaling*repmat(chm.p_calc',size(chm.beta_raw,1),1))));
 chm.SNR_2 = abs(chm.beta_raw_2 ./ chm.noise_level_2);
@@ -27,7 +37,6 @@ else
 end
 SNR = chm.SNR_2;
 
-SNRlim = 1.96;
 maskSNR = (SNR>SNRlim).*(RCS>0);
 for j=1:3
     ext = [ones(1,length(chm.time)+2);ones(length(chm.range),1),maskSNR,ones(length(chm.range),1);ones(1,length(chm.time)+2)];
@@ -51,8 +60,7 @@ for j=1:length(chm.time)
    end
 end
 
-xtime = 0:10/60/24:1;
-maxR = 2500;
+
 minR = chm.range(find(overlap_ref>=0.1,1,'first'));
 is_bad_weather = chm.sci~=0;
 gradients = NaN(5,length(xtime));
@@ -99,13 +107,13 @@ for j=1:length(xtime)-1
    if isempty(val_max)
        continue;
    end
-   val_max = val_max(chm.range(ind_max)>=minR & chm.range(ind_max)<=maxReffective & grad_profile(ind_max)<=log10(0.99)/(2*chm.range_gate));
-   ind_max = ind_max(chm.range(ind_max)>=minR & chm.range(ind_max)<=maxReffective & grad_profile(ind_max)<=log10(0.99)/(2*chm.range_gate));
+   val_max = val_max(chm.range(ind_max)>=minR & chm.range(ind_max)<=maxReffective & grad_profile(ind_max)<=log10(threshold1)/(2*chm.range_gate));
+   ind_max = ind_max(chm.range(ind_max)>=minR & chm.range(ind_max)<=maxReffective & grad_profile(ind_max)<=log10(threshold1)/(2*chm.range_gate));
    if isempty(val_max)
        continue;
    end
    
-   i_last = find(val_max<=log10(0.85)/(2*chm.range_gate),1,'first');
+   i_last = find(val_max<=log10(threshold2)/(2*chm.range_gate),1,'first');
    if ~isempty(i_last)
       val_max = val_max(1:i_last);
       ind_max = ind_max(1:i_last);
@@ -140,8 +148,8 @@ for j=1:length(xtime)-1
    end
    gradients(4,j+1) = r_sort(end);
    
+   %% Plots
    if do_plot
-       
        subplot(1,2,1)
        plot(profile,chm.range,'.-');
        xlim([3.5 6]);
@@ -174,7 +182,6 @@ for j=1:length(xtime)-1
        hold off;
        title(datestr(floor(chm.time(1))+xtime(j+1)));
        pause;
-       
    end
    
 end
