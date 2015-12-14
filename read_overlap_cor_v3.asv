@@ -333,7 +333,7 @@ h_fit = line(xlim,polyval(p,xlim),'Color','k','LineWidth',2,'LineStyle','--');
 xlabel('Median internal Temperature [°C]','FontSize',fz);
 
 % ylabel({'|ov_{corrected} - ov_{manufacturer}|_l^2 ';'/ |ov_{manufacturer}|_l^2 (%)'},'FontSize',fz);
-ylabel({'L^2 Norm of the Relative Difference';'between corrected and uncorrected signal' },'FontSize',fz);
+ylabel({'\ell^2 Norm of the Relative Difference';'between corrected and uncorrected signal' },'FontSize',fz,  'interpreter','latex');
 
 % ylabel('|ov_{corrected} - ov_{manufacturer}|_{l^{\infty}} / |ov_{manufacturer}|_{l^{\infty}} (%)','FontSize',fz);
 ylim([0 2]);
@@ -348,7 +348,7 @@ legend(h_fit,['R^2=' num2str(R2) ', RMSE=' num2str(RMSE)]);
 
 set(gca,'FontSize',fz);
 % set(gcf,'PaperPositionMode','auto');
-
+stop
 %% Plot 4: function of time 3D
 ov = overlap_ref;
 [X,Y] = meshgrid(time-datenum(2000,1,1),double(range));
