@@ -8,18 +8,18 @@ info.start_day  = 29;
 info.start_month= 8;
 info.start_year = 2014;
 
-info.end_day  =  16;
+info.end_day  =  15;
 info.end_month=  12;
 info.end_year =  2015;
 
 % Time range to apply the correction
-info_test.start_day  = 16;
-info_test.start_month= 6;
-info_test.start_year = 2014;
+info_test.start_day  = 20;
+info_test.start_month= 3;
+info_test.start_year = 2015;
 
-info_test.end_day  =  16;
-info_test.end_month=  6;
-info_test.end_year =  2014;
+info_test.end_day  =  20;
+info_test.end_month=  3;
+info_test.end_year =  2015;
 
 
 info.chm='CHM130104';
@@ -34,12 +34,12 @@ if use_local_data
     folder_corrections='C:\AllData\SharedData_Maxime\corrections_other_sites\kse\';
     folder_ncdata='C:\AllData\';
     folder_ov_ref='M:\pay-home\pay\users\poy\My Documents\workYP\lib_overlap\';
-%     folder_results_algo = 'C:\AllData\SharedData_Maxime\py\';
+    folder_results_algo = 'C:\AllData\SharedData_Maxime\corrections_other_sites\kse\';
 else
     folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\kse\';
     folder_ncdata = '\\meteoswiss.ch\mch\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
     folder_ov_ref = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
-%     folder_results_algo = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\';
+    folder_results_algo = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\kse\';
 end
 
 
@@ -86,7 +86,6 @@ if info_reloading==1 || exist('all_correction_kse.mat','file')==0
     overlap_cor0 = [];
     temp_mean0 = [];
     voltage_PM_mean0 = [];
-    ncfail0 = [];
     for t=1:length(time_vec)
         file=['result_ovp_fc_' info.chm info.tub '_' datestr(time_vec(t),'yyyymmdd') '.mat'];
         folder_day=[folder_corrections datestr(time_vec(t),'yyyy/mm/')];
@@ -134,36 +133,28 @@ if info_reloading==1 || exist('all_correction_kse.mat','file')==0
             
             disp([folder_day file])
             
-            try
-                %convert scale factor
-                scale_factor = ncreadatt([folder_day file],'temp_int','scale_factor');
-                if(~isnumeric(scale_factor))
-                    ncwriteatt([folder_day file],'temp_int','scale_factor',1./str2num(scale_factor));
-                end
-                
-                temp_int = ncread([folder_day file],'temp_int');
-                nn1 = ncread([folder_day file],'nn1');
-                time_nc = datenum(1904,1,1)+ncread([folder_day file],'time')/3600/24;
-                temp_tmp = NaN(length(result.index_final),1);
-                voltage_tmp = NaN(length(result.index_final),1);
-                range = ncread([folder_day file],'range');
-                for i=1:length(result.index_final)
-                    indt = time_nc>=result.time_start(result.index_final(i)) & time_nc<=result.time_end(result.index_final(i));
-                    temp_tmp(i) = nanmean(temp_int(indt));
-                    voltage_tmp(i) = nanmean(nn1(indt));
-                end
-                
-                %         temp_mean(k)=mean(ncread([folder_day file],'temp_int'));
-                %         voltage_PM_mean(k)=mean(ncread([folder_day file],'nn1'));
-                temp_mean0(k)=nanmedian(temp_tmp);
-                voltage_PM_mean0(k)=nanmedian(voltage_tmp);
-                ncfail0(k) = 0;
-            catch
-                warning(['unable to open ncfile: ' [folder_day file]]);
-                temp_mean0(k)=NaN;
-                voltage_PM_mean0(k)=NaN;
-                ncfail0(k) = 1;
+            %convert scale factor
+            scale_factor = ncreadatt([folder_day file],'temp_int','scale_factor');
+            if(~isnumeric(scale_factor))
+                ncwriteatt([folder_day file],'temp_int','scale_factor',1./str2num(scale_factor));
             end
+            
+            temp_int = ncread([folder_day file],'temp_int');
+            nn1 = ncread([folder_day file],'nn1');
+            time_nc = datenum(1904,1,1)+ncread([folder_day file],'time')/3600/24;
+            temp_tmp = NaN(length(result.index_final),1);
+            voltage_tmp = NaN(length(result.index_final),1);
+            range = ncread([folder_day file],'range');
+            for i=1:length(result.index_final)
+                indt = time_nc>=result.time_start(result.index_final(i)) & time_nc<=result.time_end(result.index_final(i));
+                temp_tmp(i) = nanmean(temp_int(indt));
+                voltage_tmp(i) = nanmean(nn1(indt));
+            end
+            
+            %         temp_mean(k)=mean(ncread([folder_day file],'temp_int'));
+            %         voltage_PM_mean(k)=mean(ncread([folder_day file],'nn1'));
+            temp_mean0(k)=nanmedian(temp_tmp);
+            voltage_PM_mean0(k)=nanmedian(voltage_tmp);
             
             k=k+1;
             
@@ -193,7 +184,6 @@ end
 
 % all
 index_all = 1:length(time0);
-index_all = index_all(ncfail0==0);
 
 % all, without bad quality and without T outliers
 index_good_enough=[];
@@ -302,13 +292,21 @@ ylabel('Overlap function')
 
 ti = time;
 T = temp_mean;
-ov_cor = overlap_cor;
-ov = overlap_ref;
+ov_cor = overlap_cor(:,overlap_ref>0.05);
+ov = overlap_ref(overlap_ref>0.05);
+relative_difference_selected=relative_difference(:,overlap_ref>0.05)/100;
 disp_text = false;
 
 A = T-273.15;
 %l2-norm
-B = 100*sqrt(trapz(abs(ov_cor'-repmat(ov,1,length(ti))).^2)) ./ sqrt(trapz(abs(repmat(ov,1,length(ti))).^2));
+% B = 100*sqrt(trapz(abs(ov_cor'-repmat(ov,1,length(ti))).^2)) ./ sqrt(trapz(abs(repmat(ov,1,length(ti))).^2));
+
+% To be coherent with fig 4 in paper
+% Use relative signal
+% B = 100*sqrt(trapz(abs(1./ov_cor'-repmat(1./ov,1,length(ti))).^2)) ./ sqrt(trapz(abs(repmat(1./ov,1,length(ti))).^2));
+
+B = sqrt(trapz(abs(relative_difference_selected').^2));
+
 %linf-norm
 % B = 100*max(abs(ov_cor'-repmat(ov,1,length(ti))),[],1) ./ max(abs(repmat(ov,1,length(ti))),[],1);
 
@@ -325,6 +323,7 @@ RMSErel = 100*RMSE / sqrt(sum(polyval(p,A').^2)/length(A));
 
 fz = 18;
 hf=figure('Units','Normalized','Position',[0.1 0.3 0.75 0.5]);
+
 scatter(A,B,'filled');% scatter(A,B,36,jet(length(A)),'filled')
 if disp_text
     hold on;
@@ -343,7 +342,9 @@ h_fit = line(xlim,polyval(p,xlim),'Color','k','LineWidth',2,'LineStyle','--');
 % xlabel('mean interior T during the day [°C]','FontSize',fz);
 xlabel('Median internal Temperature [°C]','FontSize',fz);
 
-ylabel({'|ov_{corrected} - ov_{manufacturer}|_l^2 ';'/ |ov_{manufacturer}|_l^2 (%)'},'FontSize',fz);
+% ylabel({'|ov_{corrected} - ov_{manufacturer}|_l^2 ';'/ |ov_{manufacturer}|_l^2 (%)'},'FontSize',fz);
+ylabel({'L^2 Norm of the Relative Difference';'between corrected and uncorrected signal' },'FontSize',fz);
+
 % ylabel('|ov_{corrected} - ov_{manufacturer}|_{l^{\infty}} / |ov_{manufacturer}|_{l^{\infty}} (%)','FontSize',fz);
 ylim([0 2]);
 % ylim([0 25]);
@@ -405,8 +406,8 @@ for j=1:length(altitudes)
     plot(time,smooth(y,11),'-','Color',colors(j,:),'linewidth',2);
 end
 legend(list_plots,list_legends);
-set(gca,'xtick',datenum(2013,1:24,1,00,00,00));
-set(gca,'xlim',[datenum(2013,4,1),datenum(2014,10,1)]);
+set(gca,'xtick',datenum(2014,8:48,1,00,00,00));
+set(gca,'xlim',[datenum(2014,8,1),datenum(2015,12,1)]);
 box on;grid on;datetick('x','mm/yy','keepticks','keeplimits');
 ylim([-40 40]);
 ylabel({'Relative difference between';'corrected and uncorrected signal [%]' })
@@ -514,7 +515,7 @@ for i=1:length(temp_vector)
         rel_diff(j) = polyval([a(j),b(j),c(j)],temp_vector(i));
     end
     
-    rel_diff(range<=range(find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last'))) = NaN;
+    rel_diff(range<=range(find(b>0 & range <range(find(overlap_ref<0.5,1,'last')),1,'last'))) = NaN;
     
     h=scatter(rel_diff,range,...
         ones(length(range),1),repmat(temp_vector(i),length(range),1),...
@@ -846,8 +847,8 @@ for t=1:length(time_vec_test)
         continue
     end
     
-    [chm,chminfo] = get_chm15k_from_files('pay',[date,'000000'],datestr(datenum(date,'yyyymmdd')+0.99999,'yyyymmddHHMMSS'),folder_ncdata);
-    %     [chm,chminfo]=readcorrectlyncfile3('pay',date,folder_ncdata);
+%     [chm,chminfo] = get_chm15k_from_files(station,[date,'000000'],datestr(datenum(date,'yyyymmdd')+0.99999,'yyyymmddHHMMSS'),folder_ncdata);
+        [chm,chminfo]=readcorrectlyncfile3(station,date,folder_ncdata);
     
     
     
@@ -866,9 +867,13 @@ for t=1:length(time_vec_test)
     
     % plot internal temperature
     figure;
-    plot(chm.time,chm.temp_int-273.15);datetick;ylim([15 40]);box on;grid on;
-    xlabel('Time [UT]');ylabel('Internal Temperature [°C]');title(['pay ' date]);
-    
+    plot(chm.time,chm.temp_int-273.15);
+    hold on
+    plot(chm.time,chm.temp_ext-273.15);
+    datetick;
+    box on;grid on;
+    xlabel('Time [UT]');ylabel('Temperature [°C]');title(['pay ' date]);
+    legend('Internal','External')
     
     %% load and plot daily overlap correction
     
@@ -885,6 +890,8 @@ for t=1:length(time_vec_test)
         end
     else warning('No file')
     end
+    
+    %% Plot 9: Plot all overlaps and manufacturer
     figure
     hold on
     %       for i=1:length(time_start)
@@ -913,6 +920,16 @@ for t=1:length(time_vec_test)
     title(['overlap functions ' date])
     
     figure
+            plot(range,(mean(result.ovp_fc(:,result.index_final),2)-overlap_ref)./overlap_ref,'--r','LineWidth',2);
+hold on
+        plot(range,(median(result.ovp_fc(:,result.index_final),2)-overlap_ref)./overlap_ref,'--k','LineWidth',2);
+    xlim([0 1200]);
+%     
+%         figure
+%         plot(range,(max(abs(result.ovp_fc(:,result.index_final)-median(result.ovp_fc(:,result.index_final),2))))./median(result.ovp_fc(:,result.index_final),2),'--k','LineWidth',2);
+%     xlim([0 1200]);
+
+    figure
     xlim([0 1200]);
     
     hold on
@@ -921,7 +938,6 @@ for t=1:length(time_vec_test)
         %         index_altitude_norm=find(chm.range>=range_start(i),1,'first');
         index_altitude_norm=find(chm.range>=700,1,'first');
         index_range=chm.range>=range_start(i) & chm.range<range_end(i);
-        
         norm_value=nanmean(chm.beta_raw(index_altitude_norm,index));
         y=nanmean(log10(abs(chm.beta_raw(index_range,index)'/norm_value)))';
         p=polyfit(chm.range(index_range),y,1);
@@ -959,7 +975,7 @@ for t=1:length(time_vec_test)
     
     title(datestr(time_start(i)))
     subplot(1,2,2)
-    plot(data_snd.ptu.rh,data_snd.ptu.gph-490)
+%     plot(data_snd.ptu.rh,data_snd.ptu.gph-490)
     ylim([0 max_alt]);
     xlabel('RH [%]')
     
@@ -967,7 +983,7 @@ for t=1:length(time_vec_test)
     
     %correct according to T
     
-    ind_last_as_reference = find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last');
+    ind_last_as_reference = find(b>0 & range <range(find(overlap_ref<0.5,1,'last')),1,'last');
     if ~isempty(ind_last_as_reference)
         a(range<=range(ind_last_as_reference)) = 0;
         c(range<=range(ind_last_as_reference)) = 0;
