@@ -140,9 +140,11 @@ else
         
         for l=1:length(stn_str)
             % check if daily netcdf available
-            list = dir([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc']);
+%             list = dir([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc']);
+            list = dir([folder yearstr  monthstr  daystr '_' stn_str{l} '_CH*.nc']);
             if isempty(list)
-                disp([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc',' : file(s) not found.']);
+%                 disp([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc',' : file(s) not found.']);
+                disp([folder yearstr  monthstr  daystr '_' stn_str{l} '_CH*.nc',' : file(s) not found.']);
                 continue;
             else
                 for j=1:length(list)
