@@ -3,21 +3,21 @@ clear variables;clc;close all;
 %% Inputs
 info.start_day  = 1;
 info.start_month= 1;
-info.start_year = 2013;
+info.start_year = 2015;
 
 info.end_day  =  31;
 info.end_month=  12;
-info.end_year =  2014;
+info.end_year =  2015;
 corrections_to_analyze='all';
-
-folder='C:\DATA\MATLAB\ceilometer\Overlap-function\Outputs\';
+station='kse';
+folder=['C:\DATA\MATLAB\ceilometer\Overlap-function\Outputs\' station '/'];
 
 %% Load data
 time_vec=datenum(info.start_year,info.start_month,info.start_day):datenum(info.end_year,info.end_month,info.end_day);
 data=NaN(length(time_vec)*145,21);
 k=1;
 for t=1:length(time_vec)
-    file=[folder 'PBL_' datestr(time_vec(t),'yyyymmdd') '_' corrections_to_analyze  '.csv' ];
+    file=[folder 'PBL_' station '_' datestr(time_vec(t),'yyyymmdd') '_' corrections_to_analyze  '.csv' ];
     if exist(file,'file')>0
         disp(['Read file: ' file])
         data_daily=dlmread (file);
