@@ -6,9 +6,12 @@ Repository for the overlap correction for CHM15k. This code was used for the pap
 ## Content ##
 * Calculate overlap correction funtion (calculate_overlap_automatic_structured.m)
 * plot all results (read_cor_overlap_v4). Including:
+
 1. All daily overlap functions
 1. temperature model
 1. Impact on gradient and temperature model simple PBL detection
+
+* Gradient Analysis (read_gradient)
 
 
 ## Examples ##
