@@ -81,8 +81,9 @@ for j=1:length(xtime)-1
    if any(is_bad_weather(indt))
        continue;
    end
-   
-   disp(datestr(floor(chm.time(1))+xtime(j+1)));
+   if floor(j/20)*20-j==0
+       disp([datestr(floor(chm.time(1))+xtime(j+1)) ' (' num2str(j) ' on ' num2str(length(xtime)) ') ' ])
+   end
    
    profile = nanmean(log10(abs(RCS(:,indt))),2);
    
