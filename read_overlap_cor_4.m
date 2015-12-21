@@ -1,4 +1,4 @@
-%Read Overlap Corrections for paeper
+%Read Overlap Corrections for paper
 % V4: Work for KSE and PAY
 % Remove plots not in paper
 clear variables;clc;close all;
@@ -22,8 +22,8 @@ info_test.start_day  = 20;
 info_test.start_month= 2;
 info_test.start_year = 2015;
 
-info_test.end_day  =  15;
-info_test.end_month=  12;
+info_test.end_day  =  20;
+info_test.end_month=  2;
 info_test.end_year =  2015;
 
 station='kse';
@@ -40,7 +40,7 @@ switch station
 end
 
 corrections_to_analyze = 'all';%{'all','good_enough','well_trusted'};
-
+folder_output =['../Outputs/' station];
 folder_ncdata = '\\meteoswiss.ch\mch\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
 folder_ov_ref = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
 folder_results_algo = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\';
@@ -88,11 +88,13 @@ end
 
 min_nb_good_samples_after_outliers_removal  = 10;
 
-info.plot=0; % Plot all data?
+info.plot=1; % Plot all data?
 info.save_plots=0;
 disp_clouds = true;
 disp_pbl = true;
-info_reloading=0; %(Reload all data?)
+info_reloading=1; %(Reload all data?)
+
+create_netcdf=1;
 
 %% Loading
 if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
@@ -339,7 +341,6 @@ set(gca,'FontSize',fz);
 %% Fit: Relative difference according to temperature
 a = zeros(size(range));
 b = zeros(size(range));
-c = zeros(size(range));
 r2 = zeros(size(range));
 rmse = zeros(size(range));
 
@@ -365,12 +366,13 @@ for j=1:find(range<=1200,1,'last')
     end
     
     [fo,gof] = fit(x_fit,y_fit,'poly1');
-    a(j) = 0;
-    b(j) = fo.p1(1);
-    c(j) = fo.p2(1);
+    a(j) = fo.p1(1);
+    b(j) = fo.p2(1);
     r2(j) = gof.rsquare;
     rmse(j) = gof.rmse;
 end
+
+
 
 %% Figure 6b: relative difference model
 disp('plot fig 6b: Relative difference using model')
@@ -384,12 +386,11 @@ ov_reconstructed=ones(length(temp_vector),length(range));
 for i=1:length(temp_vector)
     rel_diff = NaN(length(range),1);
     for j=1:length(range)
-        rel_diff(j) = polyval([a(j),b(j),c(j)],temp_vector(i));
+        rel_diff(j) = polyval([a(j),b(j)],temp_vector(i));
     end
     
-    %     rel_diff(range<=range(find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last'))) = NaN;
     %Remove abberant fit results
-    rel_diff(range<=range(find(abs(b)>10 | abs(c)>100,1,'last'))) = NaN;
+    rel_diff(range<=range(find(abs(a)>10 | abs(b)>100,1,'last'))) = NaN;
     
     h=scatter(rel_diff,range,...
         ones(length(range),1),repmat(temp_vector(i),length(range),1),...
@@ -409,6 +410,47 @@ xlim([-80 20]);
 grid on
 box on
 
+%% Filtered a and b coefficents
+a_filtered=a;
+b_filtered=b;
+%Remove abberant fit results
+ind_last_as_reference = find(range <=range(find(abs(a)>10 | abs(b)>100,1,'last')),1,'last');
+if ~isempty(ind_last_as_reference)
+    a_filtered(range<=range(ind_last_as_reference)) = 0;
+    b_filtered(range<=range(ind_last_as_reference)) = 0;
+end
+% Above 1200m, trust lufft values
+a_filtered(range>=1200) = 0;
+b_filtered(range>=1200) = 0;
+
+%% write netCDf file of Temp model
+if create_netcdf==1
+    file=[ folder_output 'Overlap_corretion_model_' station  '.nc'];
+    if exist(file,'file')
+        warning('deleting exisiting NetCDF model file')
+        delete(file)
+    end
+    disp(['Creating ' file])
+    nccreate( file,'a','dimensions',{'range', length(range)})
+    ncwriteatt( file,'a','long_name','Results of fit (difference = a *Temperature +b )')
+    ncwrite( file,'a',a_filtered)
+    
+    nccreate( file,'b','dimensions',{'range', length(range)})
+    ncwriteatt( file,'b','long_name','Results of fit (difference = a * Temperature +b )')
+    ncwrite( file,'b',b_filtered)
+    
+    nccreate( file,'range','dimensions',{'range', length(range)})
+    ncwriteatt( file,'range','long_name','Altitude above ground (m)')
+    ncwrite( file,'range',range)
+    
+    nccreate( file,'overlap_ref','dimensions',{'range', length(range)})
+    ncwriteatt( file,'overlap_ref','long_name','Reference overlap function')
+    ncwrite( file,'overlap_ref',overlap_ref)
+    
+    ncwriteatt(file,'/','description', ['Output for overlap artefact correction. ' ...
+        'Use:   Dif(z)= a (z)* T + b(z) and '...
+        'Overlap_corrected(z) = 1./ (Dif(z) /100/overlap_ref(z) + 1./overlap_ref(z));'])
+end
 
 %% Load: test data
 time_vec_test=datenum(info_test.start_year,info_test.start_month,info_test.start_day):...
@@ -447,22 +489,12 @@ for t=1:length(time_vec_test)
     end
     
     %% calculate RCS and grad(RCS) with the temperature model
-    
-    %Remove abberant fit results
-    %     ind_last_as_reference = find(range <=range(find(abs(b)>10 | abs(c)>100,1,'last')),1,'last');
-    %
-    %     if ~isempty(ind_last_as_reference)
-    %         a(range<=range(ind_last_as_reference)) = 0;
-    %         c(range<=range(ind_last_as_reference)) = 0;
-    %         b(range<=range(ind_last_as_reference)) = 0;
-    %     end
-    
     ov_rec_all = NaN(size(RCS_raw));
     for i=1:find(chm.range<=1200,1,'last')
-        rel_diff = polyval([a(i),b(i),c(i)],chm.temp_int-273.15);
+        rel_diff = polyval([a_filtered(i),b_filtered(i)],chm.temp_int-273.15);
         ov_rec_all(i,:) = 1./ (rel_diff/100/overlap_ref(i) + 1./overlap_ref(i));
     end
-    ov_rec_all(find(chm.range<=1200,1,'last')+1:end,:) = repmat(overlap_ref(find(chm.range<=1200,1,'last')+1:end),1,size(RCS_raw,2));
+%     ov_rec_all(find(chm.range<=1200,1,'last')+1:end,:) = repmat(overlap_ref(find(chm.range<=1200,1,'last')+1:end),1,size(RCS_raw,2));
     
     RCS_corr = RCS_raw./ov_rec_all.*repmat(overlap_ref,1,size(RCS_raw,2));
     
@@ -757,8 +789,8 @@ for t=1:length(time_vec_test)
             
             if info.save_plots==1
                 disp('Saving figures')
-                saveas(gcf,['../Outputs/' station '/PR2_grad_' station '_' date '_' corrections_to_analyze '_' correction_type_list{k} '.png' ])
-                saveas(gcf,['../Outputs/' station '/PR2_grad_' station '_' corrections_to_analyze '_' correction_type_list{k} '.fig' ])
+                saveas(gcf,[folder_output  'PR2_grad_' station '_' date '_' corrections_to_analyze '_' correction_type_list{k} '.png' ])
+                saveas(gcf,[folder_output  'PR2_grad_' station '_' corrections_to_analyze '_' correction_type_list{k} '.fig' ])
             end
         end
     end
