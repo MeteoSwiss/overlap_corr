@@ -1,4 +1,13 @@
 function u = invariant_probability_distribution_silagadze(Y,m)
+% u = invariant_probability_distribution_silagadze(Y,m)
+% Inputs
+%   Y: Vector to Smooth (Y must be positif and without NaN)
+%   m: Span
+% 
+% Output
+%   u: Probability distribution of the peaks
+% By Y.Poltera 2015
+% From ZK Silagadze - ?1995 http://arxiv.org/pdf/hep-ex/9506013.pdf
 
 P = zeros(length(Y),length(Y));
 A = zeros(length(Y),1);
