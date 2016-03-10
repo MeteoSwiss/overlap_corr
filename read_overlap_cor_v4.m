@@ -26,7 +26,7 @@ info_test.end_day  =  20;
 info_test.end_month=  2;
 info_test.end_year =  2015;
 
-station='kse';
+station='pay';
 
 switch station
     case 'pay'
@@ -425,7 +425,7 @@ b_filtered(range>=1200) = 0;
 
 %% write netCDf file of Temp model
 if create_netcdf==1
-    file=[ folder_output 'Overlap_correction_model_' station  '.nc'];
+    file=[ folder_output 'Overlap_correction_model_' station '_' info.tub '.nc'];
     if exist(file,'file')
         warning('deleting exisiting NetCDF model file')
         delete(file)
@@ -447,8 +447,17 @@ if create_netcdf==1
     ncwriteatt( file,'overlap_ref','long_name','Reference overlap function')
     ncwrite( file,'overlap_ref',overlap_ref)
     
+    nccreate(file,'time','dimensions',{'time',length(time)})
+    ncwriteatt( file,'time','long_name','Time with successful calibrations')
+    ncwriteatt( file,'time','units','days since 1970-01-01 00:00:00.000 (UTC)')
+    ncwrite( file,'time',time-datenum(1970,1,1))
+
+    
     ncwriteatt( file,'/','device_name',info.chm)   
     ncwriteatt( file,'/','serlom',info.tub)   
+    ncwriteatt( file,'/','Time_range',['From ' datestr(datenum(info.start_year,info.start_month,info.start_day)) ...
+        ' to ' datestr(datenum(info.end_year,info.end_month,info.end_day))])
+
 
    
     
