@@ -3,19 +3,19 @@
 % Remove plots not in paper
 clear variables;clc;close all;
 
-set(0,'DefaultFigureVisible','off')
+set(0,'DefaultFigureVisible','on')
 
 %% INPUTS
 % Time range for loading Overlap correction dataset
 % For PAY 01/02/2013 to 21/11/2014
 % For KSE 20/02/2015 to 15/12/2015
-info.start_day  = 20;
+info.start_day  = 01;
 info.start_month= 2;
-info.start_year = 2015;
+info.start_year = 2013;
 
-info.end_day  =  15;
-info.end_month=  12;
-info.end_year =  2015;
+info.end_day  =  21;
+info.end_month=  11;
+info.end_year =  2014;
 
 % Time range to apply the correction
 info_test.start_day  = 20;
@@ -26,7 +26,7 @@ info_test.end_day  =  20;
 info_test.end_month=  2;
 info_test.end_year =  2015;
 
-station='kse';
+station='pay';
 
 switch station
     case 'pay'
@@ -40,7 +40,7 @@ switch station
 end
 
 corrections_to_analyze = 'all';%{'all','good_enough','well_trusted'};
-folder_output =['../Outputs/' station];
+folder_output =['../Outputs/' station '/'];
 folder_ncdata = '\\meteoswiss.ch\mch\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
 folder_ov_ref = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
 folder_results_algo = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\';
@@ -425,7 +425,7 @@ b_filtered(range>=1200) = 0;
 
 %% write netCDf file of Temp model
 if create_netcdf==1
-    file=[ folder_output 'Overlap_corretion_model_' station  '.nc'];
+    file=[ folder_output 'Overlap_correction_model_' station '_' info.tub '.nc'];
     if exist(file,'file')
         warning('deleting exisiting NetCDF model file')
         delete(file)
@@ -446,6 +446,20 @@ if create_netcdf==1
     nccreate( file,'overlap_ref','dimensions',{'range', length(range)})
     ncwriteatt( file,'overlap_ref','long_name','Reference overlap function')
     ncwrite( file,'overlap_ref',overlap_ref)
+    
+    nccreate(file,'time','dimensions',{'time',length(time)})
+    ncwriteatt( file,'time','long_name','Time with successful calibrations')
+    ncwriteatt( file,'time','units','days since 1970-01-01 00:00:00.000 (UTC)')
+    ncwrite( file,'time',time-datenum(1970,1,1))
+
+    
+    ncwriteatt( file,'/','device_name',info.chm)   
+    ncwriteatt( file,'/','serlom',info.tub)   
+    ncwriteatt( file,'/','Time_range',['From ' datestr(datenum(info.start_year,info.start_month,info.start_day)) ...
+        ' to ' datestr(datenum(info.end_year,info.end_month,info.end_day))])
+
+
+   
     
     ncwriteatt(file,'/','description', ['Output for overlap artefact correction. ' ...
         'Use:   Dif(z)= a (z)* T + b(z) and '...
