@@ -1,7 +1,9 @@
 function [gradients,xtime] = simplePBLdetection(chm,overlap_ref,overlap_to_use,do_plot)
 % Calculate PBL with simple code
 % gradients(1,:) = lowest gradient
-% gradients(4:-1;2,:) = 3 strongest gradients
+% gradients(2,:) = 3rd strongest gradients
+% gradients(3,:) = 2ng strongest gradient
+% gradients(4,:) = strongest gradient
 % gradients(5,:) = lowest cloud base
 
 if nargin==3
@@ -73,11 +75,15 @@ end
 for j=1:length(xtime)-1
    indt = chm.time-floor(chm.time(1))>=xtime(j) & chm.time-floor(chm.time(1))<xtime(j+1);
    
+   if ~any(indt)
+       continue;
+   end
    if any(is_bad_weather(indt))
        continue;
    end
-   
-   disp(datestr(floor(chm.time(1))+xtime(j+1)));
+   if floor(j/20)*20-j==0
+       disp([datestr(floor(chm.time(1))+xtime(j+1)) ' (' num2str(j) ' on ' num2str(length(xtime)) ') ' ])
+   end
    
    profile = nanmean(log10(abs(RCS(:,indt))),2);
    
