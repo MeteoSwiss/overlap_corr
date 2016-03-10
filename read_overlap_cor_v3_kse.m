@@ -316,6 +316,7 @@ p = polyfit(A,B,1);
 SStot = sum((B'-repmat(mean(B),length(B),1)).^2);
 SSres = sum((B'-polyval(p,A')).^2);
 R2 = 1-SSres/SStot;
+R2adjusted = 1-SSres/SStot*(length(A)-1)/(length(A)-2);
 RMSE = sqrt(SSres/length(A));
 RMSErel = 100*RMSE / sqrt(sum(polyval(p,A').^2)/length(A));
 % disp(['Rsquared of the fit: ' num2str(R2)])
@@ -457,6 +458,7 @@ for j=1:find(range<=1200,1,'last')
     r2(j) = gof.rsquare;
     rmse(j) = gof.rmse;
     
+   
     %         scatter(x_fit,y_fit,'filled');grid on;box on;line([0 40],feval(fo,[0 40]),'color','k','linewidth',2);
     %         xlim([0 40]);xlabel('T [°C]');
     % %         ylim([-80 10]);

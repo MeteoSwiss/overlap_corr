@@ -538,7 +538,8 @@ for i=1:length(temp_vector)
         rel_diff(j) = polyval([a(j),b(j),c(j)],temp_vector(i));
     end
     
-    rel_diff(range<=range(find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last'))) = NaN;
+%     rel_diff(range<=range(find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last'))) = NaN;
+    rel_diff(range<=range(find(abs(b)>10 | abs(c)>100,1,'last'))) = NaN;
     
     h=scatter(rel_diff,range,...
         ones(length(range),1),repmat(temp_vector(i),length(range),1),...
@@ -899,16 +900,21 @@ for t=1:length(time_vec_test)
     
     %correct according to T
     
-    ind_last_as_reference = find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last');
+%     ind_last_as_reference = find(b>0 & range <range(find(overlap_ref<0.01,1,'last')),1,'last');
+    ind_last_as_reference = find(range <=range(find(abs(b)>10 | abs(c)>100,1,'last')),1,'last');
+    
+    a_plot = a;
+    b_plot = b;
+    c_plot = c;
     if ~isempty(ind_last_as_reference)
-        a(range<=range(ind_last_as_reference)) = 0;
-        c(range<=range(ind_last_as_reference)) = 0;
-        b(range<=range(ind_last_as_reference)) = 0;
+        a_plot(range<=range(ind_last_as_reference)) = 0;
+        c_plot(range<=range(ind_last_as_reference)) = 0;
+        b_plot(range<=range(ind_last_as_reference)) = 0;
     end
     
     ov_rec_all = NaN(size(RCS_raw));
     for i=1:find(chm.range<=1200,1,'last')
-        rel_diff = polyval([a(i),b(i),c(i)],chm.temp_int-273.15);
+        rel_diff = polyval([a_plot(i),b_plot(i),c_plot(i)],chm.temp_int-273.15);
         ov_rec_all(i,:) = 1./ (rel_diff/100/overlap_ref(i) + 1./overlap_ref(i));
     end
     ov_rec_all(find(chm.range<=1200,1,'last')+1:end,:) = repmat(overlap_ref(find(chm.range<=1200,1,'last')+1:end),1,size(RCS_raw,2));
