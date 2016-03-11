@@ -10,8 +10,8 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
     % min_fit_time = datenum([date_yyyymmdd,'093000'],'yyyymmddHHMMSS');max_fit_time = min_fit_time+min_time_interval_length/(24*60);
     d_fit_time = 5;% in minutes {5,15}
     
-    min_fit_range = 600;
-    min_fit_range = chm.range(find(ov>0.8,1,'first'));
+    %min_fit_range = 600;
+    min_fit_range = chm.range(find(ov>0.6,1,'first')); % Default 0.8
     max_fit_range = 1200;
     d_fit_range = 15;%{10}
     min_fit_length = 150;%{200,100}
@@ -19,9 +19,9 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
     d_fit_length = 15;%{20}
     min_range_std_over_mean = 225;
     dt_sliding_variance = 10;
-    max_std_over_mean = 0.01;
-    max_relgrad = 0.05;%{0.055,0.05}
-    max_relgrad_mean = 0.015;%{0.015,0.01}
+    max_std_over_mean = 0.015; % Default 0.01
+    max_relgrad = 0.08;%{0.055,0.05} Default 0.05
+    max_relgrad_mean = 0.025;%{0.015,0.01} Default 0.015
     min_expected_slope = -2*1/log(10)*10*1e-6;
     max_expected_slope = -2*1/log(10)*0.1*1e-6;
     min_expected_zero_fit_value = 4.75;%{5}
@@ -30,7 +30,7 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
     thresh_resid_rel = 0.0005;%{0.001,0.0005}
 %     thresh_resid_whole_zone = 0.01;
     thresh_resid_whole_zone = 0.15;%{0.2,0.15}
-    min_overlap_valid = 750;%{750,1500}
+    %min_overlap_valid = 750;%{750,1500}
     min_overlap_valid = chm.range(find(ov>=1,1,'first'));
     thresh_overlap_valid_rel_error = 0.01;%{0.015,0.01}
     % first_range_gradY = 500;
@@ -45,7 +45,7 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
     good_samples_proportion = 1.0;
     min_nb_good_samples = floor(good_samples_proportion*min_nb_samples);%{10,5,1}
     min_nb_good_samples_after_outliers_removal = 10;%{10,5}
-    overestimated = false;
+    %overestimated = false;
     min_nb_samples_for_skipping_good_test = 100;%{1000,100};
     
     ovp_fc_ok = {};
@@ -114,6 +114,7 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
                 if any(chm.sci(index_time) ~= 0)
                     error_flag(it) = 2;
                     error_string{it} = [error_string{it},'at least one sci~=0 for the prescribed time interval'];
+                                      
                     %results{end+1} = {[fit_time,fit_time+time_interval_length/(24*60)],[],[],error_flag(it)};
 %                     warning('at least one sci~=0 for the prescribed time interval');
                     continue;
@@ -173,9 +174,9 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
                 end
                 
                 if max_available_fit_range < min_fit_range+min_fit_length
-                    %     figure;plot(chm.range(index_range_std_over_mean_check),std_over_mean,'.-b');
-                    %     line(xlim,ones(2,1)*max_std_over_mean,'Color','k','LineStyle','--');
-                    %     ylim([0 2*max_std_over_mean]);
+%                         figure;plot(chm.range(index_range_std_over_mean_check),std_over_mean,'.-b');
+%                         line(xlim,ones(2,1)*max_std_over_mean,'Color','k','LineStyle','--');
+%                         ylim([0 2*max_std_over_mean]);
                     %     error('low std over mean');
                     error_flag(it) = 5;
                     error_string{it} = [error_string{it},['low ' num2str(dt_sliding_variance) '-min sliding std over mean : >= ' num2str(max_std_over_mean) ' @ ' num2str(max_available_fit_range) ' m (search started at ' num2str(min_range_std_over_mean) 'm, should reach ' num2str(min_fit_range+min_fit_length) 'm']];
@@ -563,8 +564,25 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
     end
     
     if(length(ovp_fc_ok)<min_nb_samples)
+%           figure
+%             flag_list={1,'no data in the prescribed time interval';...
+%                 2,'at least one sci~=0 for the prescribed time interval';...
+%                 3,['low cloud , should be >=' num2str(min_fit_range+min_fit_length) 'm'];...
+%                 4,['low mxd, should be >=' num2str(min_fit_range+min_fit_length) 'm'];...
+%                 5,['low ' num2str(dt_sliding_variance) '-min sliding std over mean : >= ' num2str(max_std_over_mean) ' @ ' num2str(max_available_fit_range) ' m (search started at ' num2str(min_range_std_over_mean) 'm, should reach ' num2str(min_fit_range+min_fit_length) 'm'];...
+%                 6,['low rel grad Y : >= ' num2str(max_relgrad) ' @ ' num2str(max_available_fit_range) ' m (search started at ' num2str(first_range_gradY) 'm, should reach ' num2str(min_fit_range+min_fit_length) 'm'];...
+%                 7,['low rel grad X : >= ' num2str(max_relgrad) ' @ ' num2str(max_available_fit_range) ' m (search started at ' num2str(min_range_std_over_mean) 'm, should reach ' num2str(min_fit_range+min_fit_length) 'm'];...
+%                 8,['low grad magn : >= ' num2str(max_relgrad) ' @ ' num2str(max_available_fit_range) ' m (search started at ' num2str(first_range_gradY) 'm, should reach ' num2str(min_fit_range+min_fit_length) 'm'];...
+%                 17,'no candidate range intervals passed the post-fit test';...
+%                 18,['not enough candidate range intervals passed the post-fit test (min: ' num2str(min_nb_ok_candidates) ')'];...
+%                 };
+%             plot(1:length(error_flag),error_flag)
+%             ylim([0 20])
+%             set(gca,'ytick',cell2mat(flag_list(:,1)),'yticklabel',flag_list(:,2))
+%             grid on
         if(isempty(ovp_fc_ok))
             warning('no samples found');
+          
             return;
         else
             warning(['unsufficient amount of samples found: ' num2str(length(ovp_fc_ok)) ', should be ' num2str(min_nb_samples)]);

@@ -7,8 +7,8 @@ clear variables; close all; clc
 
 stn = 'pay';
 
-start_time = datenum(2016,3,10);
-end_time = datenum(2016,03,10);
+start_time = datenum(2015,12,3);
+end_time = datenum(2016,03,9);
 
 %% List Of ceilometers previously studied
 stn_list = {'pay'                                ,'kse'      ,'SIRTA'    ,'Granada'  ,'Lindenberg','Hohenspeissenberg','Hamburg'  ,'Oslo'     };
@@ -61,10 +61,14 @@ for dn = start_time:1:end_time
     end
     RCS = chm.beta_raw;
     
-
+    
     %----------------------------------------------------------------------
+    %% C
     [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_good,ind_ovp_fc_ok_final,ovp_fc_final,error_string] = calculate_overlap_automatic_structured_2(chm,chminfo,RCS,ov_to_use);
-    if ~isempty(ovp_fc_ok_mat)
+    
+    
+    %% Save results
+    if ~isempty(ovp_fc_ok_mat) 
         
         result = struct;
         result.time_start = NaN(size(ovp_fc_ok_mat,2),1);
@@ -107,9 +111,8 @@ for dn = start_time:1:end_time
     end
 
     %----------------------------------------------------------------------
-    
+    %% Make and Save plots
     if ~isempty(ovp_fc_final)
-
         istn = strcmpi(stn,stn_list);
 %         out_dir = ['C:\AllData\SharedData_Maxime\' stn_list_short{istn} '\' date_yyyymmdd(1:4) '\' date_yyyymmdd(5:6) '\'];
         out_dir = [prefix_data_pay,'/data/pay/PBL4EMPA/overlap_correction/corrections_other_sites/' stn_list{istn} '/' date_yyyymmdd(1:4) '/' date_yyyymmdd(5:6) '/'];

@@ -9,30 +9,33 @@ set(0,'DefaultFigureVisible','on')
 %% INPUTS
 % Time range for loading Overlap correction dataset
 % For PAY 01/02/2013 to 21/11/2014
+% For PAY TUB TUB140016 08/11/2015 to ...
 % For KSE 20/02/2015 to 15/12/2015
-info.start_day  = 20;
-info.start_month= 2;
+info.start_day  = 8;
+info.start_month= 4;
 info.start_year = 2015;
 
-info.end_day  =  15;
-info.end_month=  12;
-info.end_year =  2015;
+info.end_day  =  11;
+info.end_month=  3;
+info.end_year =  2016;
 
 % Time range to apply the correction
-info_test.start_day  = 20;
-info_test.start_month= 2;
-info_test.start_year = 2015;
+info_test.start_day  = 10;
+info_test.start_month= 3;
+info_test.start_year = 2016;
 
-info_test.end_day  =  20;
-info_test.end_month=  2;
-info_test.end_year =  2015;
+info_test.end_day  =  10;
+info_test.end_month=  3;
+info_test.end_year =  2016;
 
-station='kse';
+station='pay';
 
 switch station
     case 'pay'
         info.chm='CHM120106';
-        info.tub='TUB120011';
+        %info.tub='TUB120011';
+        info.tub='TUB140016';
+        
     case 'kse'
         info.chm='CHM130104';
         info.tub='TUB140005';
@@ -47,7 +50,11 @@ folder_ov_ref = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correcti
 folder_results_algo = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\';
 switch station
     case 'pay'
-        folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections\';
+        if strcmp(info.tub,'TUB120011')
+            folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections\';
+        else
+            folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\pay\';
+        end
     case 'kse'
         folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\kse\';
     otherwise
@@ -56,26 +63,35 @@ end
 
 switch station
     case 'pay'
-        [results_flag,results_time] = xlsread([folder_results_algo 'results_automatic_algo_paper.xlsx'],1,'A2:B755');
-        results_time = datenum(results_time,'dd.mm.yyyy');
-        
-        ind_dates_nodata = results_flag==-2;
-        ind_dates_nodetection = results_flag==-1;
-        ind_dates_badquality = results_flag==0;
-        ind_dates_acceptablequality = results_flag==1;
-        ind_dates_goodquality = results_flag==2;
-        ind_dates_verygoodquality = results_flag==3;
-        
-        list_dates_nodetection = cellstr(datestr(results_time(ind_dates_nodetection),'yyyymmdd'));
-        list_dates_badquality = cellstr(datestr(results_time(ind_dates_badquality),'yyyymmdd'));% not better than Lufft
-        list_dates_acceptablequality = cellstr(datestr(results_time(ind_dates_acceptablequality),'yyyymmdd'));
-        list_dates_goodquality = cellstr(datestr(results_time(ind_dates_goodquality),'yyyymmdd'));
-        list_dates_verygoodquality = cellstr(datestr(results_time(ind_dates_verygoodquality),'yyyymmdd'));
-        
-        % list_dates_outliers_temperature = {'20130406','20130601','20140306','20140607','20140608','20140811','20140925'};
-        list_dates_outliers_temperature = {'20130316','20130512','20130523','20130601','20130605','20130627','20130630','20130725',...
-            '20130727','20130728','20130906','20131229','20140306','20140313','20140214','20140324','20140325','20140327',...
-            '20140417','20140522','20140811','20140823','20140925'};
+        if strcmp(info.tub,'TUB120011')            
+            [results_flag,results_time] = xlsread([folder_results_algo 'results_automatic_algo_paper.xlsx'],1,'A2:B755');
+            results_time = datenum(results_time,'dd.mm.yyyy');
+            
+            ind_dates_nodata = results_flag==-2;
+            ind_dates_nodetection = results_flag==-1;
+            ind_dates_badquality = results_flag==0;
+            ind_dates_acceptablequality = results_flag==1;
+            ind_dates_goodquality = results_flag==2;
+            ind_dates_verygoodquality = results_flag==3;
+            
+            list_dates_nodetection = cellstr(datestr(results_time(ind_dates_nodetection),'yyyymmdd'));
+            list_dates_badquality = cellstr(datestr(results_time(ind_dates_badquality),'yyyymmdd'));% not better than Lufft
+            list_dates_acceptablequality = cellstr(datestr(results_time(ind_dates_acceptablequality),'yyyymmdd'));
+            list_dates_goodquality = cellstr(datestr(results_time(ind_dates_goodquality),'yyyymmdd'));
+            list_dates_verygoodquality = cellstr(datestr(results_time(ind_dates_verygoodquality),'yyyymmdd'));
+            
+            % list_dates_outliers_temperature = {'20130406','20130601','20140306','20140607','20140608','20140811','20140925'};
+            list_dates_outliers_temperature = {'20130316','20130512','20130523','20130601','20130605','20130627','20130630','20130725',...
+                '20130727','20130728','20130906','20131229','20140306','20140313','20140214','20140324','20140325','20140327',...
+                '20140417','20140522','20140811','20140823','20140925'};
+        else
+            list_dates_nodetection = {};
+            list_dates_badquality = {};% not better than Lufft
+            list_dates_acceptablequality = {};
+            list_dates_goodquality = {};
+            list_dates_verygoodquality = {};
+            list_dates_outliers_temperature = {};
+        end
     case 'kse'
         list_dates_nodetection = {};
         list_dates_badquality = {};% not better than Lufft
@@ -98,7 +114,7 @@ info_reloading=1; %(Reload all data?)
 create_netcdf=1;
 
 %% Loading
-if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
+if info_reloading==1 || exist(['all_correction_' station '_' info.tub '.mat'],'file')==0
     %% Read: all files with a final overlap correction output
     time_vec=datenum(info.start_year,info.start_month,info.start_day):datenum(info.end_year,info.end_month,info.end_day);
     k=1;
@@ -138,7 +154,7 @@ if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
             % Get total number of candidates that passed the fit tests
             nb_candidates0(k) = size(result.ovp_fc,2);
             
-            % Get temperature            
+            % Get temperature
             
             station_str = station;
             if strcmp(station,'pay')
@@ -189,9 +205,9 @@ if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
             'No reference overlap function','Yes','No','No');
         if strcmp(answer,'Yes')
             warning('No overlap function found. Using TUB120011 overlap function')
-            fid = fopen('TUB120011_20121112_1024.cfg');ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
-            ov_to_use = cell2mat(ov_cell);
-            ov = [];
+            fid = fopen('TUB120011_20121112_1024.cfg');
+            ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
+            overlap_ref = cell2mat(ov_cell);
         else
             error('No overlap function found. Ask the corresponding overlap to the manufacturer')
         end
@@ -206,7 +222,7 @@ if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
 else
     corrections_to_analyze_tmp=corrections_to_analyze;
     disp('Load all correction in mat file')
-    load(['all_correction_' station '.mat'])
+    load(['all_correction_' station '_' info.tub '.mat'])
     corrections_to_analyze=corrections_to_analyze_tmp;
 end
 %% Select: set of overlap functions to analyse
@@ -462,15 +478,15 @@ if create_netcdf==1
     ncwriteatt( file,'time','long_name','Time with successful calibrations')
     ncwriteatt( file,'time','units','days since 1970-01-01 00:00:00.000 (UTC)')
     ncwrite( file,'time',time-datenum(1970,1,1))
-
     
-    ncwriteatt( file,'/','device_name',info.chm)   
-    ncwriteatt( file,'/','serlom',info.tub)   
+    
+    ncwriteatt( file,'/','device_name',info.chm)
+    ncwriteatt( file,'/','serlom',info.tub)
     ncwriteatt( file,'/','Time_range',['From ' datestr(datenum(info.start_year,info.start_month,info.start_day)) ...
         ' to ' datestr(datenum(info.end_year,info.end_month,info.end_day))])
-
-
-   
+    
+    
+    
     
     ncwriteatt(file,'/','description', ['Output for overlap artefact correction. ' ...
         'Use:   Dif(z)= a (z)* T + b(z) and '...
@@ -519,7 +535,7 @@ for t=1:length(time_vec_test)
         rel_diff = polyval([a_filtered(i),b_filtered(i)],chm.temp_int-273.15);
         ov_rec_all(i,:) = 1./ (rel_diff/100/overlap_ref(i) + 1./overlap_ref(i));
     end
-%     ov_rec_all(find(chm.range<=1200,1,'last')+1:end,:) = repmat(overlap_ref(find(chm.range<=1200,1,'last')+1:end),1,size(RCS_raw,2));
+    %     ov_rec_all(find(chm.range<=1200,1,'last')+1:end,:) = repmat(overlap_ref(find(chm.range<=1200,1,'last')+1:end),1,size(RCS_raw,2));
     
     RCS_corr = RCS_raw./ov_rec_all.*repmat(overlap_ref,1,size(RCS_raw,2));
     
@@ -819,7 +835,7 @@ for t=1:length(time_vec_test)
             end
         end
     end
-   if  length(time_vec_test) >2
-            close all
-   end
+    if  length(time_vec_test) >2
+        close all
+    end
 end
