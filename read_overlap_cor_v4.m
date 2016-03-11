@@ -1,4 +1,5 @@
 %Read Overlap Corrections for paper
+% Calculate a model according to the internal temperature.
 % V4: Work for KSE and PAY
 % Remove plots not in paper
 clear variables;clc;close all;
@@ -9,13 +10,13 @@ set(0,'DefaultFigureVisible','on')
 % Time range for loading Overlap correction dataset
 % For PAY 01/02/2013 to 21/11/2014
 % For KSE 20/02/2015 to 15/12/2015
-info.start_day  = 01;
+info.start_day  = 20;
 info.start_month= 2;
-info.start_year = 2013;
+info.start_year = 2015;
 
-info.end_day  =  21;
-info.end_month=  11;
-info.end_year =  2014;
+info.end_day  =  15;
+info.end_month=  12;
+info.end_year =  2015;
 
 % Time range to apply the correction
 info_test.start_day  = 20;
@@ -26,7 +27,7 @@ info_test.end_day  =  20;
 info_test.end_month=  2;
 info_test.end_year =  2015;
 
-station='pay';
+station='kse';
 
 switch station
     case 'pay'
@@ -137,7 +138,8 @@ if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
             % Get total number of candidates that passed the fit tests
             nb_candidates0(k) = size(result.ovp_fc,2);
             
-            % Get temperature
+            % Get temperature            
+            
             station_str = station;
             if strcmp(station,'pay')
                 if time_vec(t)<=datenum(2013,2,11)
@@ -183,7 +185,16 @@ if info_reloading==1 || exist(['all_correction_' station '.mat'],'file')==0
     %% Read: overlap correction and scaling in cfg file
     list = dir([folder_ov_ref,info.tub,'_*.cfg']);
     if isempty(list)
-        error('missing overlap function');
+        answer=questdlg({'No reference overlap function found','Do you want to calibrate with TUB120011 overlap function'},...
+            'No reference overlap function','Yes','No','No');
+        if strcmp(answer,'Yes')
+            warning('No overlap function found. Using TUB120011 overlap function')
+            fid = fopen('TUB120011_20121112_1024.cfg');ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
+            ov_to_use = cell2mat(ov_cell);
+            ov = [];
+        else
+            error('No overlap function found. Ask the corresponding overlap to the manufacturer')
+        end
     else
         file=[folder_ov_ref list(1).name];
         fid=fopen(file);
