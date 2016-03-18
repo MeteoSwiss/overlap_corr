@@ -1,4 +1,4 @@
-function u = invariant_probability_distribution_silagadze(Y,m)
+function u = invariant_probability_distribution_silagadze(Y,m,evenly_extend)
 % u = invariant_probability_distribution_silagadze(Y,m)
 % Inputs
 %   Y: Vector to Smooth (Y must be positif and without NaN)
@@ -8,6 +8,14 @@ function u = invariant_probability_distribution_silagadze(Y,m)
 %   u: Probability distribution of the peaks
 % By Y.Poltera 2015
 % From ZK Silagadze - ?1995 http://arxiv.org/pdf/hep-ex/9506013.pdf
+
+if nargin==2
+    evenly_extend = false;
+end
+
+if evenly_extend
+    Y =  [Y(m+1:-1:2);Y;Y(end-1:-1:end-m)];% evenly extend Y
+end
 
 P = zeros(length(Y),length(Y));
 A = zeros(length(Y),1);
@@ -38,7 +46,11 @@ for i=2:length(Y)
     u(i) = factorU(i)*u(1);
 end
 
-u(1:m) = NaN;
-u(end-m+1:end) = NaN;
+if evenly_extend
+    u = u(m+1:end-m);
+else
+    u(1:m) = NaN;
+    u(end-m+1:end) = NaN;
+end
 
 end
