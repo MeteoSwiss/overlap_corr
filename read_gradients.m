@@ -3,13 +3,13 @@ clear variables;clc;close all;
 %% Inputs
 info.start_day  = 1;
 info.start_month= 1;
-info.start_year = 2015;
+info.start_year = 2013;
 
-info.end_day  =  31;
-info.end_month=  12;
-info.end_year =  2015;
+info.end_day  =  25;
+info.end_month=  11;
+info.end_year =  2014;
 corrections_to_analyze='all';
-station='kse';
+station='pay';
 folder=['C:\DATA\MATLAB\ceilometer\Overlap-function\Outputs\' station '/'];
 
 %% Load data
@@ -17,7 +17,9 @@ time_vec=datenum(info.start_year,info.start_month,info.start_day):datenum(info.e
 data=NaN(length(time_vec)*145,21);
 k=1;
 for t=1:length(time_vec)
-    file=[folder 'PBL_' station '_' datestr(time_vec(t),'yyyymmdd') '_' corrections_to_analyze  '.csv' ];
+        file=[folder 'PBL_' datestr(time_vec(t),'yyyymmdd') '_' corrections_to_analyze  '.csv' ];
+
+%     file=[folder 'PBL_' station '_' datestr(time_vec(t),'yyyymmdd') '_' corrections_to_analyze  '.csv' ];
     if exist(file,'file')>0
         disp(['Read file: ' file])
         data_daily=dlmread (file);
@@ -142,72 +144,57 @@ scatter(gradients_model(:,4),gradients_dailycorrection(:,4))
 xlabel('Model correction')
 % legend('3rd grad.','2nd grad.','Strongest Grad.')
 ylabel('Daily cor')
-% 
-% figure
-% freq_scatter_v5(gradients_model(:,4),gradients_dailycorrection(:,4),15,15);
-% 
-% figure
-% freq_scatter_v5(gradients_model(:,4),grad_raw(:,4),15,15);
+
 %% Plot 3 : Scatter strongest gradients
 % This figure is only plot for case studies shorter than one week
 % (optimization)
 if length(time_vec)<8
-figure
-subplot(1,2,1)
-hold on
-% scatter(gradients_model(:,2),grad_raw(:,2))
-% scatter(gradients_model(:,3),grad_raw(:,3))
-% scatter(gradients_model(:,1),grad_raw(:,1))
-hold on
-for i=1:size(gradients_model,1)
-    if gradients_model(i,1)~=grad_raw(i,1)
-        plot(gradients_model(i,1),grad_raw(i,1),'sb','displayname',datestr(time(i)))
+    figure
+    subplot(1,2,1)
+    hold on
+    % scatter(gradients_model(:,2),grad_raw(:,2))
+    % scatter(gradients_model(:,3),grad_raw(:,3))
+    % scatter(gradients_model(:,1),grad_raw(:,1))
+    hold on
+    for i=1:size(gradients_model,1)
+        if gradients_model(i,1)~=grad_raw(i,1)
+            plot(gradients_model(i,1),grad_raw(i,1),'sb','displayname',datestr(time(i)))
+        end
     end
-end
-plot(gradients_model(gradients_model(:,1)==grad_raw(:,1),1),grad_raw(gradients_model(:,1)==grad_raw(:,1),1),'sb')
-xlabel('Model correction')
-ylabel('raw Overlap')
-ylim([ 0 2500])
-
-
-
-subplot(1,2,2)
-
-
-% scatter(gradients_model(:,2),gradients_dailycorrection(:,2))
-% scatter(gradients_model(:,3),gradients_dailycorrection(:,3))
-% scatter(gradients_model(:,1),gradients_dailycorrection(:,1))
-
-hold on
-for i=1:size(gradients_model,1)
-    if gradients_model(i,1)~=gradients_dailycorrection(i,1)
-        plot(gradients_model(i,1),gradients_dailycorrection(i,1),'sb','displayname',datestr(time(i)))
+    plot(gradients_model(gradients_model(:,1)==grad_raw(:,1),1),grad_raw(gradients_model(:,1)==grad_raw(:,1),1),'sb')
+    xlabel('Model correction')
+    ylabel('raw Overlap')
+    ylim([ 0 2500])
+    
+    
+    
+    subplot(1,2,2)
+    hold on
+    for i=1:size(gradients_model,1)
+        if gradients_model(i,1)~=gradients_dailycorrection(i,1)
+            plot(gradients_model(i,1),gradients_dailycorrection(i,1),'sb','displayname',datestr(time(i)))
+        end
     end
-end
-plot(gradients_model(gradients_model(:,1)==gradients_dailycorrection(:,1),1),...
-    gradients_dailycorrection(gradients_model(:,1)==gradients_dailycorrection(:,1),1),'sk')
-xlabel('Model correction')
-% legend('3rd grad.','2nd grad.','Strongest Grad.')
-ylabel('Daily cor')
-title('lowest')
-
-% Strongest
-figure
-% scatter(gradients_model(:,2),gradients_dailycorrection(:,2))
-% scatter(gradients_model(:,3),gradients_dailycorrection(:,3))
-hold on
-for i=1:size(gradients_model,1)
-    if gradients_model(i,4)~=gradients_dailycorrection(i,4)
-        plot(gradients_model(i,4),gradients_dailycorrection(i,4),'sb','displayname',datestr(time(i)))
+    plot(gradients_model(gradients_model(:,1)==gradients_dailycorrection(:,1),1),...
+        gradients_dailycorrection(gradients_model(:,1)==gradients_dailycorrection(:,1),1),'sk')
+    xlabel('Model correction')
+    % legend('3rd grad.','2nd grad.','Strongest Grad.')
+    ylabel('Daily cor')
+    title('lowest')
+    
+    % Strongest
+    figure
+    hold on
+    for i=1:size(gradients_model,1)
+        if gradients_model(i,4)~=gradients_dailycorrection(i,4)
+            plot(gradients_model(i,4),gradients_dailycorrection(i,4),'sb','displayname',datestr(time(i)))
+        end
     end
-end
-plot(gradients_model(gradients_model(:,4)==gradients_dailycorrection(:,4),4),...
-    gradients_dailycorrection(gradients_model(:,4)==gradients_dailycorrection(:,4),4),'sk')
-% scatter(gradients_model(:,1),gradients_dailycorrection(:,1))
-xlabel('Model correction')
-% legend('3rd grad.','2nd grad.','Strongest Grad.')
-ylabel('Daily cor')
-title('Strongest')
+    plot(gradients_model(gradients_model(:,4)==gradients_dailycorrection(:,4),4),...
+        gradients_dailycorrection(gradients_model(:,4)==gradients_dailycorrection(:,4),4),'sk')
+    xlabel('Model correction')
+    ylabel('Daily cor')
+    title('Strongest')
 end
 
 %% daily variability
@@ -220,7 +207,7 @@ for i=1:length(H)
     PBL_uncor(i)=nanmedian(grad_raw(hour_vec==i,4));
     PBL_model(i)=nanmedian(gradients_model(hour_vec==i,4));
 end
-figure('Units','normalized','Position',[0.01 0.2 0.8 0.6],'Name','hist Lowest grad')
+figure('Units','normalized','Position',[0.01 0.2 0.8 0.6],'Name','variability strongest grad')
 
 subplot(1,2,1)
 plot(H,PBL_uncor,'r')
