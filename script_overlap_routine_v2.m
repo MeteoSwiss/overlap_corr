@@ -5,13 +5,14 @@ clear variables; close all; clc
 
 %% Choose the station and the day
 
-stn = 'pay';
+stn = 'kse';
 
-start_time = datenum(2015,12,3);
-end_time = datenum(2016,03,9);
+start_time = datenum(2016,01,1);
+end_time = datenum(2017,12,31);
 
 %% List Of ceilometers previously studied
 stn_list = {'pay'                                ,'kse'      ,'SIRTA'    ,'Granada'  ,'Lindenberg','Hohenspeissenberg','Hamburg'  ,'Oslo'     };
+
 %          {{'TUB120011','TUB140007','TUB140016'},'TUB140005','TUB140013','TUB120012','TUB120001' ,'TUB070009'        ,'TUB100011','TUB110019'}
 % stn_list_short = {'py','ks','st','gr','ln','hs','hm','os'};
 
@@ -63,7 +64,7 @@ for dn = start_time:1:end_time
     
     
     %----------------------------------------------------------------------
-    %% C
+    %% Calculate overlap correction
     [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_good,ind_ovp_fc_ok_final,ovp_fc_final,error_string] = calculate_overlap_automatic_structured_2(chm,chminfo,RCS,ov_to_use);
     
     

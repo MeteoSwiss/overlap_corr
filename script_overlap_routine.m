@@ -1,7 +1,7 @@
 %% Choose the station and the day
 
 stn_list = {'pay'                    ,'kse'      ,'SIRTA'    ,'Granada'  ,'Lindenberg','Hohenspeissenberg','Hamburg'  ,'Oslo'     };
-%          {{'TUB120011','TUB140007'},'TUB140005','TUB140013','TUB120012','TUB120001' ,'TUB070009'        ,'TUB100011','TUB110019'}
+%          {{'TUB120011','TUB140007','TUB140016'},'TUB140005','TUB140013','TUB120012','TUB120001' ,'TUB070009'        ,'TUB100011','TUB110019'}
 stn_list_short = {'py','ks','st','gr','ln','hs','hm','os'};
 
 do_it_manual = false;
@@ -32,11 +32,10 @@ for dn = datenum(2014,08,29):1:datenum(2015,12,15)
     end
     
     if any(isnan(ov))
-%         fid = fopen('TUB120001_20120917_1024.cfg');ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
-        disp('using default ovp fc');
         fid = fopen('TUB120011_20121112_1024.cfg');ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
         ov_to_use = cell2mat(ov_cell);
         ov = [];
+        warning('No overlap function found. Using Payerne Overlap function')
     else
         ov_to_use = ov;
     end

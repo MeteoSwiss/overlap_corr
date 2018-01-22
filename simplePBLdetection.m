@@ -81,7 +81,7 @@ for j=1:length(xtime)-1
    if any(is_bad_weather(indt))
        continue;
    end
-   if floor(j/20)*20-j==0
+   if floor(j/20)*20-j==0 || j==1
        disp([datestr(floor(chm.time(1))+xtime(j+1)) ' (' num2str(j) ' on ' num2str(length(xtime)) ') ' ])
    end
    

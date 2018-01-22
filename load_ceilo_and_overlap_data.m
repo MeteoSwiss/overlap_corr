@@ -25,7 +25,7 @@ function [chm,chminfo,ov] = load_ceilo_and_overlap_data(stn,date_yyyymmdd)
         end
     elseif strcmp(stn,'SIRTA')
 %         [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'C:\AllData\SharedData_Maxime\st\');
-        [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],[root_stations_others,'CHM150101/']);
+        [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],['C:\DATA\Ceilometer\CHM15k\DATA\st/']);
         if isempty(chm)
             warning('no data found');return;
         end
@@ -40,8 +40,9 @@ function [chm,chminfo,ov] = load_ceilo_and_overlap_data(stn,date_yyyymmdd)
 %         [chm,chminfo] = readcorrectlyncfile3('lindenberg',[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'M:\pay-data\data\pay\REM\ACQ\E_PROFILE_PILOT\DATA\CEILINEX\chm15k_140101\');
 %         [chm,chminfo] = readcorrectlyncfile3('lindenberg',[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'M:\pay-data\data\pay\REM\ACQ\E_PROFILE_PILOT\DATA\CEILINEX\chx15k_080082\');
 %         [chm,chminfo] = readcorrectlyncfile3('lindenberg',[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'M:\pay-data\data\pay\REM\ACQ\E_PROFILE_PILOT\DATA\CEILINEX\chx15k_lmu\');
+        [chm,chminfo] = readcorrectlyncfile3('lindenberg',[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'D:\Ceilometer\CEILINEX\chm15k_140101\');
 
-        [chm,chminfo] = readcorrectlyncfile3('10393',[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'C:\AllData\SharedData_Maxime\ln\');
+%         [chm,chminfo] = readcorrectlyncfile3('10393',[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'D:\Ceilometer\CEILINEX RAW\chm15k_100110\nc\');
         if isempty(chm)
             warning('no data found');return;
         end

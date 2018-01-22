@@ -1,6 +1,6 @@
 %Read Overlap Corrections for paper
 % Calculate a model according to the internal temperature.
-% V4: Work for KSE and PAY
+% V4: Work for KSE, PAY and SIRTA
 % Remove plots not in paper
 clear variables;clc;close all;
 
@@ -8,62 +8,93 @@ set(0,'DefaultFigureVisible','on')
 
 %% INPUTS
 % Time range for loading Overlap correction dataset
-% For PAY 01/02/2013 to 21/11/2014
-% For PAY TUB TUB140016 08/11/2015 to ...
-% For KSE 20/02/2015 to 15/12/2015
-info.start_day  = 8;
-info.start_month= 4;
-info.start_year = 2015;
+% PAY 01/02/2013 to 21/11/2014
+% PAY TUB140016 08/11/2015 to ...
+% KSE TUB140005 20/02/2015 to 15/12/2015  
+% KSE TUB120011 01/05/2016 to 25/4/2017 (Test Case ????/2016)
+% KSE TUB120011 25/4/2017 ... Same TUB but different Overlap function after moving instrument (Test Case 17/08/2017)
+% 
 
-info.end_day  =  11;
-info.end_month=  3;
-info.end_year =  2016;
+info.start_day  = 01;
+info.start_month= 5;
+info.start_year = 2016;
+
+info.end_day  =  25;
+info.end_month=  4;
+info.end_year =  2017;
+
 
 % Time range to apply the correction
-info_test.start_day  = 10;
-info_test.start_month= 3;
+info_test.start_day  = 17;
+info_test.start_month= 8;
 info_test.start_year = 2016;
 
-info_test.end_day  =  10;
-info_test.end_month=  3;
+info_test.end_day  =  17;
+info_test.end_month=  8;
 info_test.end_year =  2016;
 
-station='pay';
+station='kse';
+suffix = ''; %'' _after_moving_2017
 
 switch station
     case 'pay'
         info.chm='CHM120106';
-        %info.tub='TUB120011';
-        info.tub='TUB140016';
+%         info.tub='TUB120011';
+                info.tub='TUB120011';
         
     case 'kse'
         info.chm='CHM130104';
-        info.tub='TUB140005';
+%         info.tub='TUB140005';
+                info.tub='TUB120011';
+
+    case 'lindenberg'
+        info.chm='CHM100110';
+        info.tub='TUB120001';
+    case 'lindenberg2'
+        info.chm='CHM140101';
+        info.tub='TUB140006';
+           case 'SIRTA'
+        info.chm='CHM150101';
+        info.tub='TUB140013';
     otherwise
         error('Define ceilometer info')
 end
 
-corrections_to_analyze = 'all';%{'all','good_enough','well_trusted'};
-folder_output =['../Outputs/' station '/'];
-folder_ncdata = '\\meteoswiss.ch\mch\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
-folder_ov_ref = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
-folder_results_algo = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\';
+corrections_to_analyze = 'good_enough';%{'all','good_enough','well_trusted'};
+% folder_output =['../Outputs/' station '/'];
+folder_output =['M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites/' station '/'];
+
+folder_ov_ref = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
+folder_results_algo = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\';
 switch station
     case 'pay'
+        folder_ncdata = 'M:\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
         if strcmp(info.tub,'TUB120011')
-            folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections\';
+            folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections\';
         else
-            folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\pay\';
+            folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\pay\';
         end
     case 'kse'
-        folder_corrections = '\\meteoswiss.ch\mch\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\kse\';
+        folder_ncdata = 'M:\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
+        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\kse\';
+    case 'lindenberg'
+        folder_ncdata = 'D:\Ceilometer\CEILINEX\chm15k_100110\';
+        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\Lindenberg\';
+    case 'lindenberg2'
+        folder_ncdata = 'D:\Ceilometer\CEILINEX\chm15k_140101\';
+        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\Lindenberg\';
+   
+       case 'SIRTA'
+        folder_ncdata = 'C:\DATA\Ceilometer\CHM15k\DATA\st\';
+        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\SIRTA\';
+
     otherwise
         error('Define folder with overlap correction')
 end
 
 switch station
     case 'pay'
-        if strcmp(info.tub,'TUB120011')            
+        if strcmp(info.tub,'TUB120011')
             [results_flag,results_time] = xlsread([folder_results_algo 'results_automatic_algo_paper.xlsx'],1,'A2:B755');
             results_time = datenum(results_time,'dd.mm.yyyy');
             
@@ -93,12 +124,44 @@ switch station
             list_dates_outliers_temperature = {};
         end
     case 'kse'
+        if strcmp(info.tub,'TUB120011')
+            list_dates_nodetection = {};
+            list_dates_badquality = {'20160526','20160802','20170603','20160924','20170908'};% not better than Lufft
+            list_dates_acceptablequality = {};
+            list_dates_goodquality = {};
+            list_dates_verygoodquality = {};
+            list_dates_outliers_temperature = {'20160526','20170603','20170803','20160902','20160707','20170908',...
+                '20170827','20170710','20170823','20160814'};
+        else
+             list_dates_nodetection = {};
+            list_dates_badquality = {};% not better than Lufft
+            list_dates_acceptablequality = {};
+            list_dates_goodquality = {};
+            list_dates_verygoodquality = {};
+            list_dates_outliers_temperature = {'20150416','20150705','20150724','20150803','20150908','20150909','20151104'};
+
+        end
+    case 'lindenberg'
         list_dates_nodetection = {};
         list_dates_badquality = {};% not better than Lufft
         list_dates_acceptablequality = {};
         list_dates_goodquality = {};
         list_dates_verygoodquality = {};
-        list_dates_outliers_temperature = {'20150416','20150705','20150724','20150803','20150908','20150909','20151104'};
+        list_dates_outliers_temperature = {};
+    case 'lindenberg2'
+        list_dates_nodetection = {};
+        list_dates_badquality = {};% not better than Lufft
+        list_dates_acceptablequality = {};
+        list_dates_goodquality = {};
+        list_dates_verygoodquality = {};
+        list_dates_outliers_temperature = {};
+    case 'SIRTA'
+        list_dates_nodetection = {};
+        list_dates_badquality = {};% not better than Lufft
+        list_dates_acceptablequality = {};
+        list_dates_goodquality = {};
+        list_dates_verygoodquality = {};
+        list_dates_outliers_temperature = {};
     otherwise
         error('Define flags')
 end
@@ -114,7 +177,7 @@ info_reloading=1; %(Reload all data?)
 create_netcdf=1;
 
 %% Loading
-if info_reloading==1 || exist(['all_correction_' station '_' info.tub '.mat'],'file')==0
+if info_reloading == 1 || exist(['all_correction_' station '_' info.tub '.mat'],'file')==0
     %% Read: all files with a final overlap correction output
     time_vec=datenum(info.start_year,info.start_month,info.start_day):datenum(info.end_year,info.end_month,info.end_day);
     k=1;
@@ -126,6 +189,7 @@ if info_reloading==1 || exist(['all_correction_' station '_' info.tub '.mat'],'f
     voltage_PM_mean0 = [];
     for t=1:length(time_vec)
         file=['result_ovp_fc_' info.chm info.tub '_' datestr(time_vec(t),'yyyymmdd') '.mat'];
+
         folder_day=[folder_corrections datestr(time_vec(t),'yyyy/mm/')];
         
         if exist([folder_day file],'file')>0
@@ -164,20 +228,39 @@ if info_reloading==1 || exist(['all_correction_' station '_' info.tub '.mat'],'f
                     station_str = 'payerne';
                 end
             end
+            if strcmp(station,'lindenberg2')
+                station_str = 'lindenberg';
+            end
             
-            file=[datestr(time_vec(t),'yyyymmdd') '_' station_str '_' info.chm '_000.nc'];
-            folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/') ] ;
-            
+            if strcmp(station,'pay') || strcmp(station,'kse')
+                file=[datestr(time_vec(t),'yyyymmdd') '_' station_str '_' info.chm '_000.nc'];
+                folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/') ] ;
+                
+            elseif strcmp(station,'SIRTA')
+                folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/dd/') ] ;
+                list = dir([folder_day 'chm15k_*.nc']);
+                file=list.name;
+                
+            else
+                file=[datestr(time_vec(t),'yyyymmdd') '_' station_str '_' info.chm '.nc'];
+                folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/') ] ;
+                
+            end
             disp([folder_day file])
+            if exist([folder_day file],'file')==0
+                error('Missing NetCDFfile file')
+            end
             
             %convert scale factor
-            scale_factor = ncreadatt([folder_day file],'temp_int','scale_factor');
-            if(~isnumeric(scale_factor))
-                ncwriteatt([folder_day file],'temp_int','scale_factor',1./str2double(scale_factor));
-            end
+            %             scale_factor = ncreadatt([folder_day file],'temp_int','scale_factor');
+            %             if(~isnumeric(scale_factor))
+            %                 ncwriteatt([folder_day file],'temp_int','scale_factor',1./str2double(scale_factor));
+            %             end
             
             temp_int = ncread([folder_day file],'temp_int');
             nn1 = ncread([folder_day file],'nn1');
+                        zenith_angle = ncread([folder_day file],'zenith');
+
             time_nc = datenum(1904,1,1)+ncread([folder_day file],'time')/3600/24;
             temp_tmp = NaN(length(result.index_final),1);
             voltage_tmp = NaN(length(result.index_final),1);
@@ -186,15 +269,20 @@ if info_reloading==1 || exist(['all_correction_' station '_' info.tub '.mat'],'f
                 indt = time_nc>=result.time_start(result.index_final(i)) & time_nc<=result.time_end(result.index_final(i));
                 temp_tmp(i) = nanmean(temp_int(indt));
                 voltage_tmp(i) = nanmean(nn1(indt));
+                
             end
             
             %         temp_mean(k)=mean(ncread([folder_day file],'temp_int'));
             %         voltage_PM_mean(k)=mean(ncread([folder_day file],'nn1'));
             temp_mean0(k)=nanmedian(temp_tmp);
             voltage_PM_mean0(k)=nanmedian(voltage_tmp);
+            zenith_angle_mean(k) = nanmedian(zenith_angle);
+            
             
             k=k+1;
-            
+        else
+            disp('No file:')
+            disp([folder_day file])
         end
     end
     
@@ -218,12 +306,20 @@ if info_reloading==1 || exist(['all_correction_' station '_' info.tub '.mat'],'f
         data=textscan(fid,'%f','delimiter','\t','headerlines',1);
         overlap_ref=data{1};
     end
-    save(['all_correction_' station '.mat'])
+    save(['all_correction_' station '_' info.tub '.mat'])
 else
     corrections_to_analyze_tmp=corrections_to_analyze;
+    info_test_tmp=info_test;
+    info_tmp=info;
+    
     disp('Load all correction in mat file')
     load(['all_correction_' station '_' info.tub '.mat'])
     corrections_to_analyze=corrections_to_analyze_tmp;
+    info=info_tmp;
+    info_test=info_test_tmp;
+    
+    clear info_test_tmp info_tmp
+    
 end
 %% Select: set of overlap functions to analyse
 disp('Select functions to analyse')
@@ -295,7 +391,9 @@ ylabel('Overlap function')
 disp('plot fig 6a: Relative difference')
 T = temp_mean-273.15;
 Treduced = (T-min(T))/(max(T)-min(T))*(length(jet)-1)+1;
-RGB = interp1(1:length(jet),jet,Treduced);
+% RGB = interp1(1:length(jet),jet,Treduced);
+RGB = interp1(1:length(jet),jet,T);
+
 relative_difference=NaN(length(time),length(range));
 for i=1:length(time)
     relative_difference(i,:)=(-1./overlap_ref'+1./overlap_cor(i,:))./(1./overlap_ref')*100;
@@ -303,14 +401,16 @@ end
 
 figure
 set(gcf,'defaultAxesColorOrder',RGB)
+colorvec = jet(length(time));
 hold on
 for i=1:length(time)
     h=scatter(relative_difference(i,:),range,...
         ones(size(overlap_cor(i,:)))*12,...
         repmat(temp_mean(i)-273.15,size(overlap_cor(i,:))),...
         'filled','displayname',datestr(time(i)));
-    hp = plot(relative_difference(i,:),range,'displayname',datestr(time(i)));
-end
+    hp = plot(relative_difference(i,:),range,...
+        '.-','displayname',datestr(time(i)));
+ end
 hc = colorbar;
 ylabel(hc,'Median internal Temperature [°C]');
 ylim([0,1200])
@@ -318,10 +418,53 @@ set(gca,'ytick',0:200:1200)
 xlabel({'Relative Difference between';'corrected and uncorrected signal [%]' })
 ylabel('Range [m]')
 colormap(jet)
-xlim([-80 20]);
+xlim([-75 75]);
 caxis([15 40]);
 grid on
 box on
+
+%% plot rel diiff changinf with time
+disp(' Relative difference with time')
+figure
+colorvec = jet(length(time));
+hold on
+for i=1:length(time)
+    hp = plot(relative_difference(i,:),range,...
+        '.-','displayname',datestr(time(i)),'color',colorvec(i,:));
+end
+hc = colorbar;
+ylabel(hc,'Time');
+ylim([0,1200])
+set(gca,'ytick',0:200:1200)
+xlabel({'Relative Difference between';'corrected and uncorrected signal [%]' })
+ylabel('Range [m]')
+colormap(jet)
+xlim([-75 75]);
+grid on
+box on
+
+% %% plot rel diiff changing with specific time
+% disp(' Relative difference with specific time')
+% figure
+% hold on
+% index1 = time < datenum( 2016,10,04);
+% index2 = time >= datenum( 2016,10,04) & time <= datenum( 2017,04,25);
+% index3 = time > datenum( 2017,04,25);
+% 
+% 
+% % plot(relative_difference(index1,:),range,'k')
+% % h1 = plot(relative_difference(~index3,:),range,'r');
+% h2= plot(relative_difference(index3,:),range,'b');
+% legend([h1(1),h2(1)],'Before 20140425','After 20170425');
+% ylim([0,1200])
+% set(gca,'ytick',0:200:1200)
+% xlabel({'Relative Difference between';'corrected and uncorrected signal [%]' })
+% ylabel('Range [m]')
+% colormap(jet)
+% xlim([-75 75]);
+% grid on
+% box on
+
 
 %% FIG 5: Scatter T vs. L2 norm REl. diff
 disp('Plot fig 5: Scatter T')
@@ -417,7 +560,9 @@ for i=1:length(temp_vector)
     end
     
     %Remove abberant fit results
-    rel_diff(range<=range(find(abs(a)>10 | abs(b)>100,1,'last'))) = NaN;
+    if any(abs(a)>10 | abs(b)>100,1)
+        rel_diff(range<=range(find(abs(a)>10 | abs(b)>100,1,'last'))) = NaN;
+    end
     
     h=scatter(rel_diff,range,...
         ones(length(range),1),repmat(temp_vector(i),length(range),1),...
@@ -433,18 +578,20 @@ set(gca,'ytick',0:200:1200)
 xlabel({'Relative Difference between';'corrected (with model) and uncorrected signal [%]' })
 ylabel('Range [m]')
 colormap(jet)
-xlim([-80 20]);
+xlim([-75 75]);
 grid on
 box on
 
 %% Filtered a and b coefficents
 a_filtered=a;
 b_filtered=b;
-%Remove abberant fit results
-ind_last_as_reference = find(range <=range(find(abs(a)>10 | abs(b)>100,1,'last')),1,'last');
-if ~isempty(ind_last_as_reference)
-    a_filtered(range<=range(ind_last_as_reference)) = 0;
-    b_filtered(range<=range(ind_last_as_reference)) = 0;
+if any(abs(a)>10 | abs(b)>100,1)
+    %Remove abberant fit results
+    ind_last_as_reference = find(range <=range(find(abs(a)>10 | abs(b)>100,1,'last')),1,'last');
+    if ~isempty(ind_last_as_reference)
+        a_filtered(range<=range(ind_last_as_reference)) = 0;
+        b_filtered(range<=range(ind_last_as_reference)) = 0;
+    end
 end
 % Above 1200m, trust lufft values
 a_filtered(range>=1200) = 0;
@@ -452,11 +599,16 @@ b_filtered(range>=1200) = 0;
 
 %% write netCDf file of Temp model
 if create_netcdf==1
-    file=[ folder_output 'Overlap_correction_model_' station '_' info.tub '.nc'];
+    file=[ folder_output 'Overlap_correction_model_' station '_' info.tub suffix '.nc'];
     if exist(file,'file')
         warning('deleting exisiting NetCDF model file')
         delete(file)
     end
+    if exist(folder_output,'dir')==0
+        disp(['create directory: ' folder_output])
+        mkdir(folder_output)
+    end
+    
     disp(['Creating ' file])
     nccreate( file,'a','dimensions',{'range', length(range)})
     ncwriteatt( file,'a','long_name','Results of fit (difference = a *Temperature +b )')
@@ -504,7 +656,7 @@ for t=1:length(time_vec_test)
     end
     
     %     [chm,chminfo] = get_chm15k_from_files('pay',[date,'000000'],datestr(datenum(date,'yyyymmdd')+0.99999,'yyyymmddHHMMSS'),folder_ncdata);
-    [chm,chminfo]=readcorrectlyncfile3(station,date,folder_ncdata);
+    [chm,chminfo]=readcorrectlyncfile3(station_str,date,folder_ncdata);
     if isempty(chm)
         warning('no file')
         continue
@@ -530,7 +682,7 @@ for t=1:length(time_vec_test)
     end
     
     %% calculate RCS and grad(RCS) with the temperature model
-    ov_rec_all = NaN(size(RCS_raw));
+    ov_rec_all = ones(size(RCS_raw));
     for i=1:find(chm.range<=1200,1,'last')
         rel_diff = polyval([a_filtered(i),b_filtered(i)],chm.temp_int-273.15);
         ov_rec_all(i,:) = 1./ (rel_diff/100/overlap_ref(i) + 1./overlap_ref(i));
@@ -557,7 +709,7 @@ for t=1:length(time_vec_test)
     %% Write text file with PBL heigt
     disp('Writing text file with PBL height')
     M=[datevec(datenum(date,'yyyymmdd')+xtime) gradients_raw' gradients_dailycorrection' gradients_corr'];
-    dlmwrite(['../Outputs/' station '/PBL_' station '_' date '_' corrections_to_analyze  '.csv' ],M)
+    dlmwrite([folder_output '/PBL_' station '_' date '_' corrections_to_analyze  '.csv' ],M)
     
     if info.plot==1
         %% plot internal temperature
@@ -585,6 +737,8 @@ for t=1:length(time_vec_test)
                     range_end = result.range_end(result.index_final);
                 end
             end
+            
+            
             %% Plot 9: Plot all daily overlaps and manufacturer
             figure
             hold on
@@ -602,6 +756,70 @@ for t=1:length(time_vec_test)
             xlabel('Range [m]')
             ylabel('Overlap function')
             title(['overlap functions ' date])
+            
+            %% plot 10: Fit Example
+            figure
+            subplot(1,2,1)
+            hold on
+            ylim([0 1000])
+            xlim([ 4 6])
+            plot(xlim,[min(result.range_start(result.index_final)) min(result.range_start(result.index_final))],'--k')
+            plot(xlim,[max(result.range_end(result.index_final)) max(result.range_end(result.index_final))],'--k')
+            xlabel('log_{10}(abs(\beta_{raw}))')
+            ylabel('Range [m]')
+            box on
+            grid on
+            
+            subplot(1,2,2)
+            hold on
+            ylim([0 1000])
+            xlabel('f_c')
+%             plot([1 1],ylim,'-k')
+            box on
+            grid on
+            switch station
+                case 'pay'
+                    station_name='Payerne';
+                case'kse'
+                    station_name='Kleine Scheidegd';
+                otherwise
+                    station_name=station;
+            end
+            
+            dif_all=NaN(length(result.time_start(result.index_final)),length(chm.range));
+            lrcs_all=NaN(length(result.time_start(result.index_final)),length(chm.range));
+            for i=1:length(result.time_start(result.index_final))
+                index_time=chm.time>=result.time_start(result.index_final(i)) & chm.time<result.time_end(result.index_final(i));
+                index_range =chm.range>=result.range_start(result.index_final(i)) & chm.range<result.range_end(result.index_final(i));
+                p = polyfit(chm.range(index_range),mean(log10(abs(chm.beta_raw(index_range,index_time))),2),1);
+                dif = mean(log10(abs(chm.beta_raw(:,index_time))),2)-polyval(p,chm.range);
+                dif( chm.range>=result.range_end(result.index_final(i)))=0;
+                dif_all(i,:)=dif;
+                lrcs_all(i,:)=log10(abs(mean(chm.beta_raw(:,index_time),2)));
+                overlap_corr_factor = 10.^(dif);
+                subplot(1,2,1)
+%                 plot(log10(abs(mean(chm.beta_raw(:,index_time),2))),chm.range,'.k')
+                h=plot([p(2) p(1)*1000+p(2)],[0 1000],'--r');
+                legend(h,'Linear fit')
+                
+%                 subplot(1,2,2)
+%                 plot(1+dif,chm.range,'.k')
+            end
+            subplot(1,2,1)
+            errorshade4(median(lrcs_all),chm.range',...
+                nanmin(lrcs_all),nanmax(lrcs_all),...
+                zeros(size(chm.range')), zeros(size(chm.range')),'k');
+            plot(median(lrcs_all),chm.range,'color','k','linewidth',2);
+            
+            subplot(1,2,2)
+            errorshade4(median(dif_all)+1,chm.range',...
+                nanmin(dif_all+1),nanmax(dif_all+1),...
+                zeros(size(chm.range')), zeros(size(chm.range')),'k');
+            plot(median(dif_all)+1,chm.range,'color','k','linewidth',2);
+            
+            
+            suptitle([station_name ': ' date])  
+
         else warning('No daily correction file')
         end
         
@@ -797,7 +1015,9 @@ for t=1:length(time_vec_test)
                 for j=1:3
                     cbh = chm.cbh(j,:);
                     cbh(cbh <= chm.cho) = NaN;
-                    hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
+                                        hcbh = line(chm.time-offset,cbh,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
+
+%                     hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
                 end
                 list_plots(end+1) = hcbh;
                 list_legends{end+1} = 'CBH';

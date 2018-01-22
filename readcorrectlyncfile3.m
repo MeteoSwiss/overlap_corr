@@ -103,12 +103,17 @@ else
         elseif(strcmp(stn,'kse') && time_day==datenum('20140819','yyyymmdd'))
             stn_str = {'jun','kse'};
         end
-
+        
         daystr = num2str(day,'%02.0f');
         monthstr = num2str(month,'%02.0f');
         yearstr = num2str(year,'%02.0f');
         disp(['------- ' yearstr  monthstr  daystr  '  -----'])
-        folder = [root_folder '' yearstr '/' monthstr '/'];
+        if strcmp(stn_str,'SIRTA')
+            folder = [root_folder '' yearstr '/' monthstr '/' daystr '/'];
+            
+        else
+            folder = [root_folder '' yearstr '/' monthstr '/'];
+        end
         
         % special cases
         if(strcmp(stn,'jenaCHM120106') && time_day==datenum('20121114','yyyymmdd'))
@@ -140,11 +145,17 @@ else
         
         for l=1:length(stn_str)
             % check if daily netcdf available
-%             list = dir([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc']);
-            list = dir([folder yearstr  monthstr  daystr '_' stn_str{l} '_CH*.nc']);
+            %             list = dir([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc']);
+            if strcmp(stn_str{l},'SIRTA')
+                str = [folder 'chm15k_*_*_*_' yearstr  monthstr  daystr  '*.nc'];
+            else
+                str = [folder yearstr  monthstr  daystr '_' stn_str{l} '_CH*.nc'];
+            end
+            list = dir(str);
+            
             if isempty(list)
-%                 disp([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc',' : file(s) not found.']);
-                disp([folder yearstr  monthstr  daystr '_' stn_str{l} '_CH*.nc',' : file(s) not found.']);
+                %                 disp([folder yearstr  monthstr  daystr '_' lower(stn_str{l}) '_CH*.nc',' : file(s) not found.']);
+                disp([str,' : file(s) not found.']);
                 continue;
             else
                 for j=1:length(list)
@@ -190,11 +201,11 @@ for k=1:length(filenames)
         % read variable
         chm.(info.Variables(i).Name) = double(ncread(ncfilename,info.Variables(i).Name));
         % rewrite 'scale_factor' attributes to their original values
-        for j=1:length(info.Variables(i).Attributes)
-            if(strcmp(info.Variables(i).Attributes(j).Name,'scale_factor'))
-                ncwriteatt(ncfilename,info.Variables(i).Name,'scale_factor',scale_factor);
-            end
-        end
+%         for j=1:length(info.Variables(i).Attributes)
+%             if(strcmp(info.Variables(i).Attributes(j).Name,'scale_factor'))
+%                 ncwriteatt(ncfilename,info.Variables(i).Name,'scale_factor',scale_factor);
+%             end
+%         end
     end
     
     % convert time to MATLAB time format
@@ -212,7 +223,7 @@ for k=1:length(filenames)
         scaling = NaN;
     else
         if(strcmp(chm.serlom,'TUB120001'))
-            if datenum(date_yyyymmdd,'yyyymmdd')<datenum(2012,09,17)
+            if time_day<datenum(2012,09,17)
                 fname_overlapfc = list(1).name;
             else
                 fname_overlapfc = list(2).name;

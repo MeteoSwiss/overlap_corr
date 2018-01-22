@@ -72,7 +72,7 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
 %     %results = {};
  
     
-    % 1. Try succesive time intervals
+    %% 1. Try succesive time intervals
     for time_interval_length = min_time_interval_length:d_time_interval_length:max_time_interval_length
 %         disp(['Time interval length is ' num2str(time_interval_length) ' minutes']);
 
