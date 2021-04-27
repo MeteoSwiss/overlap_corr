@@ -10,32 +10,38 @@ set(0,'DefaultFigureVisible','on')
 % Time range for loading Overlap correction dataset
 % PAY 01/02/2013 to 21/11/2014
 % PAY TUB140016 08/11/2015 to ...
-% KSE TUB140005 20/02/2015 to 15/12/2015  
+% KSE TUB140005 20/02/2015 to 15/12/2015
 % KSE TUB120011 01/05/2016 to 25/4/2017 (Test Case 17/08/2016)
 % KSE TUB120011 25/4/2017 ... Same TUB but different Overlap function after moving instrument (Test Case 17/08/2017)
-% KSE TUB170001 25/3/2019 ... 
+% Lin
 
-% 
+info.start_day  = 1;
+info.start_month= 1;
+info.start_year = 2014;
 
-info.start_day  = 25;
-info.start_month= 3;
-info.start_year = 2019;
-
-info.end_day  =  1;
-info.end_month=  11;
+info.end_day  =  31;
+info.end_month=  8;
 info.end_year =  2020;
 
 
 % Time range to apply the correction
-info_test.start_day  = 1;
+info_test.start_day  = 27;
 info_test.start_month= 4;
-info_test.start_year = 2019;
+info_test.start_year = 2018;
 
-info_test.end_day  =  1;
+info_test.end_day  =  27;
 info_test.end_month=  4;
-info_test.end_year =  2019;
+info_test.end_year =  2018;
 
-station='kse';
+station='0-20000-0-10393';
+id = '0';
+% station = '0-20008-0-UGR';
+% id = 'A';
+
+
+info.tub='0';
+info.chm = station;
+
 suffix = ''; %'' _after_moving_2017
 
 min_nb_good_samples_after_outliers_removal  = 10;
@@ -46,147 +52,43 @@ disp_clouds = true;
 disp_pbl = true;
 info_reloading=1; %(Reload all data?)
 
-create_netcdf=1;
+create_netcdf = 0;
 
-switch station
-    case 'pay'
-        info.chm='CHM120106';
-%         info.tub='TUB120011';
-                info.tub='TUB120011';
-        
-    case 'kse'
-        info.chm='CHM130104';
-%         info.tub='TUB140005';
-%                 info.tub='TUB120011';
-                info.tub='TUB170001';
 
-    case 'lindenberg'
-        info.chm='CHM100110';
-        info.tub='TUB120001';
-    case 'lindenberg2'
-        info.chm='CHM140101';
-        info.tub='TUB140006';
-           case 'SIRTA'
-        info.chm='CHM150101';
-        info.tub='TUB140013';
-    otherwise
-        error('Define ceilometer info')
-end
-
-corrections_to_analyze = 'good_enough';%{'all','good_enough','well_trusted'};
 % folder_output =['../Outputs/' station '/'];
-folder_output =['M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites/' station '/'];
+folder_output =['D:\Projects\201806 Start Finder Overlap/' station '/'];
 
 folder_ov_ref = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
-folder_results_algo = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\';
+folder_results_algo = 'D:\Projects\201806 Start Finder Overlap\';
+
+
+folder_corrections =['D:\Projects\201806 Start Finder Overlap/' station '/'];
+
+
+folder_ncdata = 'E:\E_PROFILE_ALC\L1_FILES\';
+folder_ncdata = 'C:\DATA\ALC\';
+
+
+corrections_to_analyze = 'good_enough';%{'all','good_enough','well_trusted'};
+
+list_dates_nodetection = {};
 switch station
-    case 'pay'
-        folder_ncdata = 'M:\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
-        if strcmp(info.tub,'TUB120011')
-            folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections\';
-        else
-            folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\pay\';
-        end
-    case 'kse'
-        folder_ncdata = 'M:\pay-data\data\pay\REM\ACQ\CEILO_CHM15k\NetCDF\daily\';
-        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\kse\';
-    case 'lindenberg'
-        folder_ncdata = 'D:\Ceilometer\CEILINEX\chm15k_100110\';
-        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\Lindenberg\';
-    case 'lindenberg2'
-        folder_ncdata = 'D:\Ceilometer\CEILINEX\chm15k_140101\';
-        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\Lindenberg\';
-   
-       case 'SIRTA'
-        folder_ncdata = 'C:\DATA\Ceilometer\CHM15k\DATA\st\';
-        folder_corrections = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\corrections_other_sites\SIRTA\';
+    case '0-20000-0-10393'
+        list_dates_badquality = {'20140915';'20150315';'20160409';'20180207';...
+            '20150704';'20150705';'20150810';'20170928';'20150519'};% not better than Lufft
+
+    case '0-20008-0-UGR'
+        list_dates_badquality = {'20180425'};% not better than Lufft
 
     otherwise
-        error('Define folder with overlap correction')
-end
+        list_dates_badquality = {};% not better than Lufft
 
-switch station
-    case 'pay'
-        if strcmp(info.tub,'TUB120011')
-            [results_flag,results_time] = xlsread([folder_results_algo 'results_automatic_algo_paper.xlsx'],1,'A2:B755');
-            results_time = datenum(results_time,'dd.mm.yyyy');
-            
-            ind_dates_nodata = results_flag==-2;
-            ind_dates_nodetection = results_flag==-1;
-            ind_dates_badquality = results_flag==0;
-            ind_dates_acceptablequality = results_flag==1;
-            ind_dates_goodquality = results_flag==2;
-            ind_dates_verygoodquality = results_flag==3;
-            
-            list_dates_nodetection = cellstr(datestr(results_time(ind_dates_nodetection),'yyyymmdd'));
-            list_dates_badquality = cellstr(datestr(results_time(ind_dates_badquality),'yyyymmdd'));% not better than Lufft
-            list_dates_acceptablequality = cellstr(datestr(results_time(ind_dates_acceptablequality),'yyyymmdd'));
-            list_dates_goodquality = cellstr(datestr(results_time(ind_dates_goodquality),'yyyymmdd'));
-            list_dates_verygoodquality = cellstr(datestr(results_time(ind_dates_verygoodquality),'yyyymmdd'));
-            
-            % list_dates_outliers_temperature = {'20130406','20130601','20140306','20140607','20140608','20140811','20140925'};
-            list_dates_outliers_temperature = {'20130316','20130512','20130523','20130601','20130605','20130627','20130630','20130725',...
-                '20130727','20130728','20130906','20131229','20140306','20140313','20140214','20140324','20140325','20140327',...
-                '20140417','20140522','20140811','20140823','20140925'};
-        else
-            list_dates_nodetection = {};
-            list_dates_badquality = {};% not better than Lufft
-            list_dates_acceptablequality = {};
-            list_dates_goodquality = {};
-            list_dates_verygoodquality = {};
-            list_dates_outliers_temperature = {};
-        end
-    case 'kse'
-        if strcmp(info.tub,'TUB120011')
-            list_dates_nodetection = {};
-            list_dates_badquality = {'20160526','20160802','20170603','20160924','20170908'};% not better than Lufft
-            list_dates_acceptablequality = {};
-            list_dates_goodquality = {};
-            list_dates_verygoodquality = {};
-            list_dates_outliers_temperature = {'20160526','20170603','20170803','20160902','20160707','20170908',...
-                '20170827','20170710','20170823','20160814'};
-             elseif strcmp(info.tub,'TUB170001')
-            list_dates_nodetection = {};
-            list_dates_badquality = {'20190401'};% not better than Lufft
-            list_dates_acceptablequality = {};
-            list_dates_goodquality = {};
-            list_dates_verygoodquality = {};
-            list_dates_outliers_temperature = {};
+end
         
-        else
-             list_dates_nodetection = {};
-            list_dates_badquality = {};% not better than Lufft
-            list_dates_acceptablequality = {};
-            list_dates_goodquality = {};
-            list_dates_verygoodquality = {};
-            list_dates_outliers_temperature = {'20150416','20150705','20150724','20150803','20150908','20150909','20151104'};
-
-        end
-    case 'lindenberg'
-        list_dates_nodetection = {};
-        list_dates_badquality = {};% not better than Lufft
-        list_dates_acceptablequality = {};
-        list_dates_goodquality = {};
-        list_dates_verygoodquality = {};
-        list_dates_outliers_temperature = {};
-    case 'lindenberg2'
-        list_dates_nodetection = {};
-        list_dates_badquality = {};% not better than Lufft
-        list_dates_acceptablequality = {};
-        list_dates_goodquality = {};
-        list_dates_verygoodquality = {};
-        list_dates_outliers_temperature = {};
-    case 'SIRTA'
-        list_dates_nodetection = {};
-        list_dates_badquality = {};% not better than Lufft
-        list_dates_acceptablequality = {};
-        list_dates_goodquality = {};
-        list_dates_verygoodquality = {};
-        list_dates_outliers_temperature = {};
-    otherwise
-        error('Define flags')
-end
-
+list_dates_acceptablequality = {};
+list_dates_goodquality = {};
+list_dates_verygoodquality = {};
+list_dates_outliers_temperature = {};
 
 
 %% Loading
@@ -199,10 +101,10 @@ if info_reloading == 1 || exist(['all_correction_' station '_' info.tub  suffix 
     nb_candidates0 = [];
     overlap_cor0 = [];
     temp_mean0 = [];
-    voltage_PM_mean0 = [];
+    %     voltage_PM_mean0 = [];
     for t=1:length(time_vec)
-        file=['result_ovp_fc_' info.chm info.tub '_' datestr(time_vec(t),'yyyymmdd') '.mat'];
-
+        file=['result_ovp_fc_' info.chm info.tub '_' datestr(time_vec(t),'yyyymmddHHMMSS') '.mat'];
+        
         folder_day=[folder_corrections datestr(time_vec(t),'yyyy/mm/')];
         
         if exist([folder_day file],'file')>0
@@ -233,63 +135,35 @@ if info_reloading == 1 || exist(['all_correction_' station '_' info.tub  suffix 
             
             % Get temperature
             
-            station_str = station;
-            if strcmp(station,'pay')
-                if time_vec(t)<=datenum(2013,2,11)
-                    station_str = 'NN';
-                elseif time_vec(t)<=datenum(2013,6,13)
-                    station_str = 'payerne';
-                end
-            end
-            if strcmp(station,'lindenberg2')
-                station_str = 'lindenberg';
-            end
+            file=['L1_' station '_' id  datestr(time_vec(t),'yyyymmdd') '.nc'];
+            folder_day=[folder_ncdata station '/' datestr(time_vec(t),'yyyy/mm/') ] ;
             
-            if strcmp(station,'pay') || strcmp(station,'kse')
-                file=[datestr(time_vec(t),'yyyymmdd') '_' station_str '_' info.chm '_000.nc'];
-                folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/') ] ;
-                
-            elseif strcmp(station,'SIRTA')
-                folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/dd/') ] ;
-                list = dir([folder_day 'chm15k_*.nc']);
-                file=list.name;
-                
-            else
-                file=[datestr(time_vec(t),'yyyymmdd') '_' station_str '_' info.chm '.nc'];
-                folder_day=[folder_ncdata datestr(time_vec(t),'yyyy/mm/') ] ;
-                
-            end
+            
             disp([folder_day file])
             if exist([folder_day file],'file')==0
                 error('Missing NetCDFfile file')
             end
             
-            %convert scale factor
-            %             scale_factor = ncreadatt([folder_day file],'temp_int','scale_factor');
-            %             if(~isnumeric(scale_factor))
-            %                 ncwriteatt([folder_day file],'temp_int','scale_factor',1./str2double(scale_factor));
-            %             end
+            
             
             temp_int = ncread([folder_day file],'temp_int');
-            nn1 = ncread([folder_day file],'nn1');
-                        zenith_angle = ncread([folder_day file],'zenith');
-
-            time_nc = datenum(1904,1,1)+ncread([folder_day file],'time')/3600/24;
+            
+            
+            time_nc = datenum(1970,1,1)+ncread([folder_day file],'time');
             temp_tmp = NaN(length(result.index_final),1);
-            voltage_tmp = NaN(length(result.index_final),1);
             range = ncread([folder_day file],'range');
             for i=1:length(result.index_final)
                 indt = time_nc>=result.time_start(result.index_final(i)) & time_nc<=result.time_end(result.index_final(i));
                 temp_tmp(i) = nanmean(temp_int(indt));
-                voltage_tmp(i) = nanmean(nn1(indt));
+                %                 voltage_tmp(i) = nanmean(nn1(indt));
                 
             end
             
             %         temp_mean(k)=mean(ncread([folder_day file],'temp_int'));
             %         voltage_PM_mean(k)=mean(ncread([folder_day file],'nn1'));
             temp_mean0(k)=nanmedian(temp_tmp);
-            voltage_PM_mean0(k)=nanmedian(voltage_tmp);
-            zenith_angle_mean(k) = nanmedian(zenith_angle);
+            %             voltage_PM_mean0(k)=nanmedian(voltage_tmp);
+            % %             zenith_angle_mean(k) = nanmedian(zenith_angle);
             
             
             k=k+1;
@@ -301,24 +175,24 @@ if info_reloading == 1 || exist(['all_correction_' station '_' info.tub  suffix 
     
     %% Read: overlap correction and scaling in cfg file
     list = dir([folder_ov_ref,info.tub,'_*.cfg']);
-    if isempty(list)
-        answer=questdlg({'No reference overlap function found','Do you want to calibrate with TUB120011 overlap function'},...
-            'No reference overlap function','Yes','No','No');
-        if strcmp(answer,'Yes')
-            warning('No overlap function found. Using TUB120011 overlap function')
-            fid = fopen('TUB120011_20121112_1024.cfg');
-            ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
-            overlap_ref = cell2mat(ov_cell);
-        else
-            error('No overlap function found. Ask the corresponding overlap to the manufacturer')
-        end
-    else
-        file=[folder_ov_ref list(1).name];
-        fid=fopen(file);
-        disp(file);
-        data=textscan(fid,'%f','delimiter','\t','headerlines',1);
-        overlap_ref=data{1};
-    end
+    %     if isempty(list)
+    %         answer=questdlg({'No reference overlap function found','Do you want to calibrate with TUB120011 overlap function'},...
+    %             'No reference overlap function','Yes','No','No');
+    %         if strcmp(answer,'Yes')
+    warning('No overlap function found. Using TUB120011 overlap function')
+    fid = fopen('TUB120011_20121112_1024.cfg');
+    ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
+    overlap_ref = cell2mat(ov_cell);
+    %         else
+    %             error('No overlap function found. Ask the corresponding overlap to the manufacturer')
+    %         end
+    %     else
+    %         file=[folder_ov_ref list(1).name];
+    %         fid=fopen(file);
+    %         disp(file);
+    %         data=textscan(fid,'%f','delimiter','\t','headerlines',1);
+    %         overlap_ref=data{1};
+    %     end
     save(['all_correction_' station '_' info.tub '.mat'])
 else
     corrections_to_analyze_tmp=corrections_to_analyze;
@@ -333,6 +207,10 @@ else
     
     clear info_test_tmp info_tmp
     
+end
+
+if k==1
+    error('No files found')
 end
 %% Select: set of overlap functions to analyse
 disp('Select functions to analyse')
@@ -369,7 +247,7 @@ quality = quality0(index_of_interest);
 nb_candidates = nb_candidates0(index_of_interest);
 overlap_cor = overlap_cor0(index_of_interest,:);
 temp_mean = temp_mean0(index_of_interest);
-voltage_PM_mean = voltage_PM_mean0(index_of_interest);
+% voltage_PM_mean = voltage_PM_mean0(index_of_interest);
 
 
 %% FIG 4 : all overlap functions
@@ -423,7 +301,7 @@ for i=1:length(time)
         'filled','displayname',datestr(time(i)));
     hp = plot(relative_difference(i,:),range,...
         '.-','displayname',datestr(time(i)));
- end
+end
 hc = colorbar;
 ylabel(hc,'Median internal Temperature [°C]');
 ylim([0,1200])
@@ -463,8 +341,8 @@ box on
 % index1 = time < datenum( 2016,10,04);
 % index2 = time >= datenum( 2016,10,04) & time <= datenum( 2017,04,25);
 % index3 = time > datenum( 2017,04,25);
-% 
-% 
+%
+%
 % % plot(relative_difference(index1,:),range,'k')
 % % h1 = plot(relative_difference(~index3,:),range,'r');
 % h2= plot(relative_difference(index3,:),range,'b');
@@ -662,42 +540,45 @@ end
 time_vec_test=datenum(info_test.start_year,info_test.start_month,info_test.start_day):...
     datenum(info_test.end_year,info_test.end_month,info_test.end_day);
 for t=1:length(time_vec_test)
-    date = datestr(time_vec_test(t),'yyyymmdd');
-    
-    if ~any(time==datenum(date,'yyyymmdd'))
+    date_str = datestr(time_vec_test(t),'yyyymmdd');
+        end_str = datestr(time_vec_test(t)+0.99999999,'yyyymmddHHMMSS');
+
+    if ~any(time==datenum(date_str,'yyyymmdd'))
         warning('No Overlap correction for the selected day')
     end
     
     %     [chm,chminfo] = get_chm15k_from_files('pay',[date,'000000'],datestr(datenum(date,'yyyymmdd')+0.99999,'yyyymmddHHMMSS'),folder_ncdata);
-    [chm,chminfo]=readcorrectlyncfile3(station_str,date,folder_ncdata);
-    if isempty(chm)
+%     [chm,chminfo]=readcorrectlyncfile3(station_str,date,folder_ncdata);
+    L1 =read_L1_EPROFILE_v4(station,id,date_str,end_str,folder_ncdata);
+
+    if isempty(L1)
         warning('no file')
         continue
     end
     
-    RCS_raw = chm.beta_raw;
-    if any(time==datenum(date,'yyyymmdd'))
-        RCS_dailycorrection = chm.beta_raw./repmat(overlap_cor(time==datenum(date,'yyyymmdd'),:)',1,size(chm.beta_raw,2)).*repmat(overlap_ref,1,size(chm.beta_raw,2));
+    RCS_raw = L1.rcs_0';
+    if any(time==datenum(date_str,'yyyymmdd'))
+        RCS_dailycorrection = L1.rcs_0'./repmat(overlap_cor(time==datenum(date_str,'yyyymmdd'),:)',1,size(L1.rcs_0,1)).*repmat(overlap_ref,1,size(L1.rcs_0,1));
     else
         RCS_dailycorrection=NaN(size(    RCS_raw));
     end
     %% Calc Grad
     grad_raw = NaN(size(RCS_raw));
-    for j=1:length(chm.time)
-        grad_raw(:,j) = 1/(2*chm.range_gate)*conv(RCS_raw(:,j),[1 0 -1],'same');
+    for j=1:length(L1.time)
+        grad_raw(:,j) = 1/(2*L1.range)*conv(RCS_raw(:,j),[1 0 -1],'same');
     end
     
     grad_dailycorrection = NaN(size(RCS_dailycorrection));
-    if any(time==datenum(date,'yyyymmdd'))
-        for j=1:length(chm.time)
-            grad_dailycorrection(:,j) = 1/(2*chm.range_gate)*conv(RCS_dailycorrection(:,j),[1 0 -1],'same');
+    if any(time==datenum(date_str,'yyyymmdd'))
+        for j=1:length(L1.time)
+            grad_dailycorrection(:,j) = 1/(2*L1.range)*conv(RCS_dailycorrection(:,j),[1 0 -1],'same');
         end
     end
     
     %% calculate RCS and grad(RCS) with the temperature model
     ov_rec_all = ones(size(RCS_raw));
-    for i=1:find(chm.range<=1200,1,'last')
-        rel_diff = polyval([a_filtered(i),b_filtered(i)],chm.temp_int-273.15);
+    for i=1:find(L1.range<=1200,1,'last')
+        rel_diff = polyval([a_filtered(i),b_filtered(i)],L1.temp_int-273.15);
         ov_rec_all(i,:) = 1./ (rel_diff/100/overlap_ref(i) + 1./overlap_ref(i));
     end
     %     ov_rec_all(find(chm.range<=1200,1,'last')+1:end,:) = repmat(overlap_ref(find(chm.range<=1200,1,'last')+1:end),1,size(RCS_raw,2));
@@ -706,40 +587,40 @@ for t=1:length(time_vec_test)
     
     % Calc Grad
     grad_corr = NaN(size(RCS_corr));
-    for j=1:length(chm.time)
-        grad_corr(:,j) = 1/(2*chm.range_gate)*conv(RCS_corr(:,j),[1 0 -1],'same');
+    for j=1:length(L1.time)
+        grad_corr(:,j) = 1/(2*L1.range)*conv(RCS_corr(:,j),[1 0 -1],'same');
     end
     
     %% Calculate PBL with simple code
-    [gradients_raw,~] = simplePBLdetection(chm,overlap_ref,overlap_ref);
-    if any(time==datenum(date,'yyyymmdd'))
-        [gradients_dailycorrection, ~] = simplePBLdetection(chm,overlap_ref,overlap_cor(time==datenum(date,'yyyymmdd'),:)');
-    else
-        gradients_dailycorrection=NaN(size(gradients_raw));
-    end
-    [gradients_corr,xtime] = simplePBLdetection(chm,overlap_ref,ov_rec_all);
+%     [gradients_raw,~] = simplePBLdetection(L1,overlap_ref,overlap_ref);
+%     if any(time==datenum(date_str,'yyyymmdd'))
+%         [gradients_dailycorrection, ~] = simplePBLdetection(L1,overlap_ref,overlap_cor(time==datenum(date_str,'yyyymmdd'),:)');
+%     else
+%         gradients_dailycorrection=NaN(size(gradients_raw));
+%     end
+%     [gradients_corr,xtime] = simplePBLdetection(L1,overlap_ref,ov_rec_all);
     
     %% Write text file with PBL heigt
-    disp('Writing text file with PBL height')
-    M=[datevec(datenum(date,'yyyymmdd')+xtime) gradients_raw' gradients_dailycorrection' gradients_corr'];
-    dlmwrite([folder_output '/PBL_' station '_' date '_' corrections_to_analyze  '.csv' ],M)
+%     disp('Writing text file with PBL height')
+%     M=[datevec(datenum(date_str,'yyyymmdd')+xtime) gradients_raw' gradients_dailycorrection' gradients_corr'];
+%     dlmwrite([folder_output '/PBL_' station '_' date_str '_' corrections_to_analyze  '.csv' ],M)
     
     if info.plot==1
         %% plot internal temperature
         figure;
-        plot(chm.time,chm.temp_int-273.15);
+        plot(L1.time,L1.temp_int-273.15);
         hold on
-        plot(chm.time,chm.temp_ext-273.15);
+        plot(L1.time,L1.temp_ext-273.15);
         datetick;
         box on;grid on;
-        xlabel('Time [UT]');ylabel('Temperature [°C]');title(['pay ' date]);
+        xlabel('Time [UT]');ylabel('Temperature [°C]');title(['pay ' date_str]);
         legend('Internal','External')
         
-        if any(time==datenum(date,'yyyymmdd'))
+        if any(time==datenum(date_str,'yyyymmdd'))
             
             %% load and plot daily overlap correction
-            file=['result_ovp_fc_' info.chm info.tub '_' date '.mat'];
-            folder_day=[folder_corrections datestr(datenum(date,'yyyymmdd'),'yyyy/mm/')];
+            file=['result_ovp_fc_' info.chm info.tub '_' date_str '.mat'];
+            folder_day=[folder_corrections datestr(datenum(date_str,'yyyymmdd'),'yyyy/mm/')];
             if exist([folder_day file],'file')>0
                 disp([folder_day file]);
                 load([folder_day file],'result');
@@ -768,7 +649,7 @@ for t=1:length(time_vec_test)
             grid on;box on;
             xlabel('Range [m]')
             ylabel('Overlap function')
-            title(['overlap functions ' date])
+            title(['overlap functions ' date_str])
             
             %% plot 10: Fit Example
             figure
@@ -787,7 +668,7 @@ for t=1:length(time_vec_test)
             hold on
             ylim([0 1000])
             xlabel('f_c')
-%             plot([1 1],ylim,'-k')
+            %             plot([1 1],ylim,'-k')
             box on
             grid on
             switch station
@@ -799,40 +680,40 @@ for t=1:length(time_vec_test)
                     station_name=station;
             end
             
-            dif_all=NaN(length(result.time_start(result.index_final)),length(chm.range));
-            lrcs_all=NaN(length(result.time_start(result.index_final)),length(chm.range));
+            dif_all=NaN(length(result.time_start(result.index_final)),length(L1.range));
+            lrcs_all=NaN(length(result.time_start(result.index_final)),length(L1.range));
             for i=1:length(result.time_start(result.index_final))
-                index_time=chm.time>=result.time_start(result.index_final(i)) & chm.time<result.time_end(result.index_final(i));
-                index_range =chm.range>=result.range_start(result.index_final(i)) & chm.range<result.range_end(result.index_final(i));
-                p = polyfit(chm.range(index_range),mean(log10(abs(chm.beta_raw(index_range,index_time))),2),1);
-                dif = mean(log10(abs(chm.beta_raw(:,index_time))),2)-polyval(p,chm.range);
-                dif( chm.range>=result.range_end(result.index_final(i)))=0;
+                index_time=L1.time>=result.time_start(result.index_final(i)) & L1.time<result.time_end(result.index_final(i));
+                index_range =L1.range>=result.range_start(result.index_final(i)) & L1.range<result.range_end(result.index_final(i));
+                p = polyfit(L1.range(index_range),mean(log10(abs(L1.beta_raw(index_range,index_time))),2),1);
+                dif = mean(log10(abs(L1.beta_raw(:,index_time))),2)-polyval(p,L1.range);
+                dif( L1.range>=result.range_end(result.index_final(i)))=0;
                 dif_all(i,:)=dif;
-                lrcs_all(i,:)=log10(abs(mean(chm.beta_raw(:,index_time),2)));
+                lrcs_all(i,:)=log10(abs(mean(L1.beta_raw(:,index_time),2)));
                 overlap_corr_factor = 10.^(dif);
                 subplot(1,2,1)
-%                 plot(log10(abs(mean(chm.beta_raw(:,index_time),2))),chm.range,'.k')
+                %                 plot(log10(abs(mean(chm.beta_raw(:,index_time),2))),chm.range,'.k')
                 h=plot([p(2) p(1)*1000+p(2)],[0 1000],'--r');
                 legend(h,'Linear fit')
                 
-%                 subplot(1,2,2)
-%                 plot(1+dif,chm.range,'.k')
+                %                 subplot(1,2,2)
+                %                 plot(1+dif,chm.range,'.k')
             end
             subplot(1,2,1)
-            errorshade4(median(lrcs_all),chm.range',...
+            errorshade4(median(lrcs_all),L1.range',...
                 nanmin(lrcs_all),nanmax(lrcs_all),...
-                zeros(size(chm.range')), zeros(size(chm.range')),'k');
-            plot(median(lrcs_all),chm.range,'color','k','linewidth',2);
+                zeros(size(L1.range')), zeros(size(L1.range')),'k');
+            plot(median(lrcs_all),L1.range,'color','k','linewidth',2);
             
             subplot(1,2,2)
-            errorshade4(median(dif_all)+1,chm.range',...
+            errorshade4(median(dif_all)+1,L1.range',...
                 nanmin(dif_all+1),nanmax(dif_all+1),...
-                zeros(size(chm.range')), zeros(size(chm.range')),'k');
-            plot(median(dif_all)+1,chm.range,'color','k','linewidth',2);
+                zeros(size(L1.range')), zeros(size(L1.range')),'k');
+            plot(median(dif_all)+1,L1.range,'color','k','linewidth',2);
             
             
-            suptitle([station_name ': ' date])  
-
+            suptitle([station_name ': ' date_str])
+            
         else
             warning('No daily correction file')
         end
@@ -846,22 +727,22 @@ for t=1:length(time_vec_test)
         list_plots = [];
         list_legends = {};
         hold on;
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
         list_legends{end+1} = 'clouds';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'or','markerfacecolor','r','markersize',10);
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(4,:),'or','markerfacecolor','r','markersize',10);
         list_legends{end+1} = '1. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'>g');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(3,:),'>g');
         list_legends{end+1} = '2. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'<b');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(2,:),'<b');
         list_legends{end+1} = '3. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'+k');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(1,:),'+k');
         list_legends{end+1} = 'min. gradient';
         legend(list_plots,list_legends,'location','eastoutside');
         ylim([0 ymax]);
-        xlim([datenum(date,'yyyymmdd') datenum(date,'yyyymmdd')+1]);
-        set(gca,'xtick',datenum(date,'yyyymmdd'):4/24:datenum(date,'yyyymmdd')+1);
+        xlim([datenum(date_str,'yyyymmdd') datenum(date_str,'yyyymmdd')+1]);
+        set(gca,'xtick',datenum(date_str,'yyyymmdd'):4/24:datenum(date_str,'yyyymmdd')+1);
         datetick('x','HH:MM','keepticks','keeplimits');
-        title(['pay ' date ' - ' correction_type]);
+        title(['pay ' date_str ' - ' correction_type]);
         grid on;box on;
         xlabel('Time [UT]');
         ylabel('Range [m]');
@@ -872,22 +753,22 @@ for t=1:length(time_vec_test)
         list_plots = [];
         list_legends = {};
         hold on;
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
         list_legends{end+1} = 'clouds';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'or');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(4,:),'or');
         list_legends{end+1} = '1. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'>g');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(3,:),'>g');
         list_legends{end+1} = '2. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'<b');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(2,:),'<b');
         list_legends{end+1} = '3. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'+k');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(1,:),'+k');
         list_legends{end+1} = 'min. gradient';
         legend(list_plots,list_legends,'location','eastoutside');
         ylim([0 ymax]);
-        xlim([datenum(date,'yyyymmdd') datenum(date,'yyyymmdd')+1]);
-        set(gca,'xtick',datenum(date,'yyyymmdd'):4/24:datenum(date,'yyyymmdd')+1);
+        xlim([datenum(date_str,'yyyymmdd') datenum(date_str,'yyyymmdd')+1]);
+        set(gca,'xtick',datenum(date_str,'yyyymmdd'):4/24:datenum(date_str,'yyyymmdd')+1);
         datetick('x','HH:MM','keepticks','keeplimits');
-        title(['pay ' date ' - ' correction_type]);
+        title(['pay ' date_str ' - ' correction_type]);
         grid on;box on;
         xlabel('Time [UT]');
         ylabel('Range [m]');
@@ -898,22 +779,22 @@ for t=1:length(time_vec_test)
         list_plots = [];
         list_legends = {};
         hold on;
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(5,:),'.','color',0.5*ones(1,3));
         list_legends{end+1} = 'clouds';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(4,:),'or');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(4,:),'or');
         list_legends{end+1} = '1. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(3,:),'>g');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(3,:),'>g');
         list_legends{end+1} = '2. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(2,:),'<b');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(2,:),'<b');
         list_legends{end+1} = '3. strongest gradient';
-        list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime,gradients(1,:),'+k');
+        list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime,gradients(1,:),'+k');
         list_legends{end+1} = 'min. gradient';
         legend(list_plots,list_legends,'location','eastoutside');
         ylim([0 ymax]);
-        xlim([datenum(date,'yyyymmdd') datenum(date,'yyyymmdd')+1]);
-        set(gca,'xtick',datenum(date,'yyyymmdd'):4/24:datenum(date,'yyyymmdd')+1);
+        xlim([datenum(date_str,'yyyymmdd') datenum(date_str,'yyyymmdd')+1]);
+        set(gca,'xtick',datenum(date_str,'yyyymmdd'):4/24:datenum(date_str,'yyyymmdd')+1);
         datetick('x','HH:MM','keepticks','keeplimits');
-        title(['pay ' date ' - ' correction_type]);
+        title(['pay ' date_str ' - ' correction_type]);
         grid on;box on;
         xlabel('Time [UT]');
         ylabel('Range [m]');
@@ -930,7 +811,7 @@ for t=1:length(time_vec_test)
             RCS = RCS_list{k};
             grad = grad_list{k};
             gradients = gradients_list{k};
-            title_str = [info.chm '/' info.tub '/' station ' - ' date ' - ' correction_type_list{k}];
+            title_str = [info.chm '/' info.tub '/' station ' - ' date_str ' - ' correction_type_list{k}];
             
             
             offset = datenum(2000,1,1)-1;
@@ -947,8 +828,8 @@ for t=1:length(time_vec_test)
             
             figure('Units','normalized','Position',[0.005 0.05 0.8 0.6],'Name',[ 'Pcolor ' correction_type_list{k}])
             handles.axes_pcolor_RCS = subplot(2,1,1);
-            handles.surface_pcolor_RCS = pcolor(chm.time-offset,chm.range,log10(abs(RCS)));
-            xlims = [floor(chm.time(1))-offset, ceil(chm.time(end))-offset];
+            handles.surface_pcolor_RCS = pcolor(L1.time-offset,L1.range,log10(abs(RCS)));
+            xlims = [floor(L1.time(1))-offset, ceil(L1.time(end))-offset];
             xticks = xlims(1)-mod(mod(xlims(1),1)*24,dxticks)/24:dxticks/24:xlims(2);
             set(gca,'XLim',xlims,'XTick',xticks,'XMinorTick','on');
             set(gca,'YLim',ylims,'YTick',yticks,'YMinorTick','on');
@@ -968,17 +849,17 @@ for t=1:length(time_vec_test)
             
             if(disp_pbl)
                 hold on;
-                list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime-offset,gradients(4,:),'or','MarkerSize',8,'markerfacecolor','r');
+                list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime-offset,gradients(4,:),'or','MarkerSize',8,'markerfacecolor','r');
                 list_legends{end+1} = '1. strongest gradient';
-                list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime-offset,gradients(3,:),'>g','MarkerSize',7,'markerfacecolor','g');
+                list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime-offset,gradients(3,:),'>g','MarkerSize',7,'markerfacecolor','g');
                 list_legends{end+1} = '2. strongest gradient';
-                list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime-offset,gradients(2,:),'<b','MarkerSize',7,'markerfacecolor','b');
+                list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime-offset,gradients(2,:),'<b','MarkerSize',7,'markerfacecolor','b');
                 list_legends{end+1} = '3. strongest gradient';
-                list_plots(end+1) = plot(datenum(date,'yyyymmdd')+xtime-offset,gradients(1,:),'.k','MarkerSize',7,'markerfacecolor','k');
+                list_plots(end+1) = plot(datenum(date_str,'yyyymmdd')+xtime-offset,gradients(1,:),'.k','MarkerSize',7,'markerfacecolor','k');
                 list_legends{end+1} = 'min. gradient';
             end
             
-            if any(time==datenum(date,'yyyymmdd'))
+            if any(time==datenum(date_str,'yyyymmdd'))
                 % add area where the daily overlap function was calculated
                 unique_time_start=unique(time_start);
                 unique_time_end=unique(time_end);
@@ -997,41 +878,41 @@ for t=1:length(time_vec_test)
                 end
                 
                 % plot these areas without overlaping lines
-                range_start_min_all=NaN(size(chm.time));
-                range_start_max_all=NaN(size(chm.time));
-                for i=1:length(chm.time)
-                    index=chm.time(i)>=unique_time_start & chm.time(i)<unique_time_end;
+                range_start_min_all=NaN(size(L1.time));
+                range_start_max_all=NaN(size(L1.time));
+                for i=1:length(L1.time)
+                    index=L1.time(i)>=unique_time_start & L1.time(i)<unique_time_end;
                     if any(index)
                         range_start_min_all(i)=min(range_start_min(index));
                         range_start_max_all(i)=max(range_start_max(index));
                     end
                 end
-                plot(chm.time-offset,range_start_min_all,'--k')
-                list_plots(end+1)=plot(chm.time-offset,range_start_max_all,'--k');
+                plot(L1.time-offset,range_start_min_all,'--k')
+                list_plots(end+1)=plot(L1.time-offset,range_start_max_all,'--k');
                 list_legends{end+1} = 'Ref. zone';
                 
                 %Vertical bar if there is a new box
-                for i=2:length(chm.time)
+                for i=2:length(L1.time)
                     if ~isnan(range_start_min_all(i)) && isnan(range_start_min_all(i-1))
-                        plot([chm.time(i)  chm.time(i)]-offset,[range_start_min_all(i) range_start_max_all(i)],'--k')
+                        plot([L1.time(i)  L1.time(i)]-offset,[range_start_min_all(i) range_start_max_all(i)],'--k')
                     end
                 end
                 
                 %Vertical bar if a box is ending
-                for i=1:length(chm.time)-1
+                for i=1:length(L1.time)-1
                     if ~isnan(range_start_min_all(i)) && isnan(range_start_min_all(i+1))
-                        plot([chm.time(i)  chm.time(i)]-offset,[range_start_min_all(i) range_start_max_all(i)],'--k')
+                        plot([L1.time(i)  L1.time(i)]-offset,[range_start_min_all(i) range_start_max_all(i)],'--k')
                     end
                 end
             end
             % Plot Clouds
             if(disp_clouds)
                 for j=1:3
-                    cbh = chm.cbh(j,:);
-                    cbh(cbh <= chm.cho) = NaN;
-                                        hcbh = line(chm.time-offset,cbh,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
-
-%                     hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
+                    cbh = L1.cbh(j,:);
+                    cbh(cbh <= L1.cho) = NaN;
+                    hcbh = line(L1.time-offset,cbh,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
+                    
+                    %                     hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',7,'Color',[0.5 0.5 0.5]);
                 end
                 list_plots(end+1) = hcbh;
                 list_legends{end+1} = 'CBH';
@@ -1044,8 +925,8 @@ for t=1:length(time_vec_test)
             set(gca,'FontSize',fz);
             title(title_str,'FontSize',fz);
             handles.axes_pcolor_grad = subplot(2,1,2);
-            handles.surface_pcolor_grad = pcolor(chm.time-offset,chm.range,grad);
-            xlims = [floor(chm.time(1))-offset, ceil(chm.time(end))-offset];
+            handles.surface_pcolor_grad = pcolor(L1.time-offset,L1.range,grad);
+            xlims = [floor(L1.time(1))-offset, ceil(L1.time(end))-offset];
             xticks = xlims(1)-mod(mod(xlims(1),1)*24,dxticks)/24:dxticks/24:xlims(2);
             set(gca,'XLim',xlims,'XTick',xticks,'XMinorTick','on');
             set(gca,'YLim',ylims,'YTick',yticks,'YMinorTick','on');
@@ -1064,7 +945,7 @@ for t=1:length(time_vec_test)
             
             if info.save_plots==1
                 disp('Saving figures')
-                saveas(gcf,[folder_output  'PR2_grad_' station suffix '_' date '_' corrections_to_analyze '_' correction_type_list{k} '.png' ])
+                saveas(gcf,[folder_output  'PR2_grad_' station suffix '_' date_str '_' corrections_to_analyze '_' correction_type_list{k} '.png' ])
                 saveas(gcf,[folder_output  'PR2_grad_' station suffix '_' corrections_to_analyze '_' correction_type_list{k} '.fig' ])
             end
         end

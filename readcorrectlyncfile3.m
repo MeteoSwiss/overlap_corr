@@ -110,7 +110,9 @@ else
         disp(['------- ' yearstr  monthstr  daystr  '  -----'])
         if strcmp(stn_str,'SIRTA')
             folder = [root_folder '' yearstr '/' monthstr '/' daystr '/'];
-            
+        elseif strcmp(stn_str,'Granada')
+            folder = [root_folder '' yearstr '/' ];
+
         else
             folder = [root_folder '' yearstr '/' monthstr '/'];
         end

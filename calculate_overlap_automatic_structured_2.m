@@ -121,14 +121,22 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
                 end
                 
                 cbh = chm.cbh(1,index_time);
-                min_cloud_range = min(cbh(cbh>=chm.cho));
+%                 min_cloud_range = min(cbh(cbh>=chm.cho));
+                                min_cloud_range = min(cbh(:));
+
                 if isempty(min_cloud_range)
                     min_cloud_range = chm.range(end);
                 end
                 
-                mxd = chm.mxd(index_time);
-                min_mxd_range = min(mxd(mxd>=chm.cho));
-                if isempty(min_mxd_range)
+                if isfield(chm,'mxd')
+                    mxd = chm.mxd(index_time);
+                    min_mxd_range = min(mxd(mxd>=chm.cho));
+                    if isempty(min_mxd_range)
+                        
+                        min_mxd_range = chm.range(end);
+                    end
+                else
+                    % No MXD in E-PROFILE
                     min_mxd_range = chm.range(end);
                 end
                 
@@ -161,8 +169,10 @@ function [ovp_fc_ok_mat,ovp_fc_ok_mat_time,ovp_fc_ok_mat_range,ind_ovp_fc_ok_goo
                 for k=1:length(t_sliding_variance)
                     if(t_sliding_variance(k)+dt_sliding_variance /(24*60)<=t_sliding_variance(end))
                         index_time_sliding_variance = chm.time>=t_sliding_variance(k) & chm.time<=t_sliding_variance(k)+dt_sliding_variance/(24*60);
-%                         std_over_mean_tmp = std(log10(abs(RCS(index_range_std_over_mean_check,index_time_sliding_variance))),0,2)./mean(log10(abs(RCS(index_range_std_over_mean_check,index_time_sliding_variance))),2);
-                        std_over_mean_tmp = std(log10(abs(RCS(index_range_std_over_mean_check,index_time_sliding_variance))),0,2)./median(log10(abs(RCS(index_range_std_over_mean_check,index_time))),2);
+                        %                         std_over_mean_tmp = std(log10(abs(RCS(index_range_std_over_mean_check,index_time_sliding_variance))),0,2)./mean(log10(abs(RCS(index_range_std_over_mean_check,index_time_sliding_variance))),2);
+                        
+                        std_over_mean_tmp = std(log10(abs(RCS(index_range_std_over_mean_check,index_time_sliding_variance))),0,2)./...
+                            median(log10(abs(RCS(index_range_std_over_mean_check,index_time))),2);
                         std_over_mean = max(std_over_mean,std_over_mean_tmp);
                     end
                 end

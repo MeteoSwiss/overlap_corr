@@ -4,8 +4,8 @@ Repository for the overlap correction for CHM15k. This code was used for the pap
 
 
 ## Content ##
-* Calculate overlap correction funtion ( script_overlap_routine.m calling  calculate_overlap_automatic_structured_2.m)
-* plot all results (read_cor_overlap_v4). Including:
+* Calculate overlap correction funtion ( script_overlap_routine_v2.m calling  calculate_overlap_automatic_structured_2.m)
+* plot all results (read_overlap_cor_v5). Including:
 
 1. All daily overlap functions
 1. temperature model

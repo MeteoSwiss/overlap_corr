@@ -7,13 +7,13 @@ if nargs==4
     RCS = varargin{3};
     grad_raw = varargin{4};
     file_out = [];
-elseif nargs==5;
+elseif nargs==5
     chm = varargin{1};
     chminfo = varargin{2};
     RCS = varargin{3};
     grad_raw = varargin{4};
     file_out = varargin{5};
-elseif nargs==6;
+elseif nargs==6
     chm = varargin{1};
     chminfo = varargin{2};
     RCS = varargin{3};
@@ -44,14 +44,33 @@ else
 end
 
 
-for j=1:length(chminfo.Attributes)
-    if strcmpi(chminfo.Attributes(j).Name,'source') || strcmpi(chminfo.Attributes(j).Name,'device_name')
-        device_name = chminfo.Attributes(j).Value;
-    elseif strcmpi(chminfo.Attributes(j).Name,'serlom')
-        serlom = chminfo.Attributes(j).Value;
-    elseif strcmpi(chminfo.Attributes(j).Name,'location')
-        location = chminfo.Attributes(j).Value;
-    end
+% for j=1:length(chminfo.Attributes)
+%     if strcmpi(chminfo.Attributes(j).Name,'source') || strcmpi(chminfo.Attributes(j).Name,'device_name')
+%         device_name = chminfo.Attributes(j).Value;
+%     elseif strcmpi(chminfo.Attributes(j).Name,'serlom')
+%         serlom = chminfo.Attributes(j).Value;
+%     elseif strcmpi(chminfo.Attributes(j).Name,'location')
+%         location = chminfo.Attributes(j).Value;
+%     end
+% end
+
+% device_name = chm.instrument_serial_number;
+% serlom = chm.optical_module_id;
+% location = chm.site_location;
+if isfield(chm,'instrument_serial_number')
+    device_name = chm.instrument_serial_number;
+elseif isfield(chm,'device_name')
+    device_name = chm.device_name{1};
+end
+if isfield(chm,'optical_module_id')
+    serlom = chm.optical_module_id;
+elseif isfield(chm,'serlom')
+    serlom = chm.serlom{1};
+end
+if isfield(chm,'site_location')
+location = chm.site_location;
+elseif isfield(chm,'location')
+location = chm.location{1};
 end
 
 stn = [device_name '/' serlom,'/' location];
@@ -156,18 +175,23 @@ if nargs==4 || nargs==5
 end
 
 if nargs==6 || nargs==7 || nargs==8
-
+%% Figure with 4 panels
     % Choose pcolor parameters
     aspect_ratio = [1 5000 1];% 'auto'
     dxticks = 4;%in hours
     fz = 14;% FontSize
-    ylims = [0 2500];
-    yticks = ylims(1):100:ylims(2);
+    ymax = 2500;
+    ylims = [0 ymax];
+    yticks = ylims(1):500:ylims(2);
     clims = [4.5 6];
     clims_grad = [-1000 1000];
     load('ypcmap2','cmap');
 
-    
+    RCS(chm.range>ymax,:) = [];
+    range = chm.range(chm.range<=ymax);
+    grad_raw(chm.range>ymax,:) = [];
+    RCS_corr(chm.range>ymax,:) = [];
+    grad_corr(chm.range>ymax,:) = [];
     if isempty(file_out)
         handles.figure_main = figure('Color','w','Position',[0 0 1920 1024],'Visible','on');
     else
@@ -175,7 +199,7 @@ if nargs==6 || nargs==7 || nargs==8
     end
 
     handles.axes_pcolor_RCS = subplot(2,2,1);
-    handles.surface_pcolor_RCS = pcolor(chm.time-offset,chm.range,log10(abs(RCS)));
+    handles.surface_pcolor_RCS = pcolor(chm.time-offset,range,log10(abs(RCS)));
     xlims = [floor(chm.time(1))-offset, ceil(chm.time(end))-offset];
     xticks = xlims(1)-mod(mod(xlims(1),1)*24,dxticks)/24:dxticks/24:xlims(2);
     set(gca,'XLim',xlims,'XTick',xticks,'XMinorTick','on');
@@ -205,8 +229,10 @@ if nargs==6 || nargs==7 || nargs==8
     if(disp_clouds)
         for j=1:3
             cbh = chm.cbh(j,:);
-            cbh(cbh <= chm.cho) = NaN;
-            hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',16,'Color',[0.5 0.5 0.5]);
+%             cbh(cbh <= chm.cho) = NaN;
+%             hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',16,'Color',[0.5 0.5 0.5]);
+
+            hcbh = line(chm.time-offset,cbh,'LineStyle','none','Marker','.','MarkerSize',16,'Color',[0.5 0.5 0.5]);
         end
         list_plots(end+1) = hcbh;
         list_legends{end+1} = 'CBH';
@@ -269,8 +295,6 @@ if nargs==6 || nargs==7 || nargs==8
 
     end
     
-    
-    
     if ~isempty(list_plots)
 %         legend(list_plots,list_legends);
     end
@@ -278,8 +302,9 @@ if nargs==6 || nargs==7 || nargs==8
 
     title([stn ' ' date_yyyymmdd],'FontSize',fz);
 
+    %% subplot grad_raw
     handles.axes_pcolor_grad = subplot(2,2,3);
-    handles.surface_pcolor_grad = pcolor(chm.time-offset,chm.range,grad_raw);
+    handles.surface_pcolor_grad = pcolor(chm.time-offset,range,grad_raw);
     xlims = [floor(chm.time(1))-offset, ceil(chm.time(end))-offset];
     xticks = xlims(1)-mod(mod(xlims(1),1)*24,dxticks)/24:dxticks/24:xlims(2);
     set(gca,'XLim',xlims,'XTick',xticks,'XMinorTick','on');
@@ -298,9 +323,9 @@ if nargs==6 || nargs==7 || nargs==8
     set(gca,'FontSize',fz);
 
     % *************************************************************************
-
+    %% subplot RCS_ror
     handles.axes_pcolor_RCS_corr = subplot(2,2,2);
-    handles.surface_pcolor_RCS_corr = pcolor(chm.time-offset,chm.range,log10(abs(RCS_corr)));
+    handles.surface_pcolor_RCS_corr = pcolor(chm.time-offset,range,log10(abs(RCS_corr)));
     xlims = [floor(chm.time(1))-offset, ceil(chm.time(end))-offset];
     xticks = xlims(1)-mod(mod(xlims(1),1)*24,dxticks)/24:dxticks/24:xlims(2);
     set(gca,'XLim',xlims,'XTick',xticks,'XMinorTick','on');
@@ -332,8 +357,10 @@ if nargs==6 || nargs==7 || nargs==8
     if(disp_clouds)
         for j=1:3
             cbh = chm.cbh(j,:);
-            cbh(cbh <= chm.cho) = NaN;
-            hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',16,'Color',[0.5 0.5 0.5]);
+%             cbh(cbh <= chm.cho) = NaN;
+%             hcbh = line(chm.time-offset,cbh-chm.cho,'LineStyle','none','Marker','.','MarkerSize',16,'Color',[0.5 0.5 0.5]);
+                   hcbh = line(chm.time-offset,cbh,'LineStyle','none','Marker','.','MarkerSize',16,'Color',[0.5 0.5 0.5]);
+
         end
         list_plots(end+1) = hcbh;
         list_legends{end+1} = 'CBH';
@@ -401,8 +428,10 @@ if nargs==6 || nargs==7 || nargs==8
 
     title([stn ' ' date_yyyymmdd ' corrected'],'FontSize',fz);
 
+    
+    %% subplot grad_corr
     handles.axes_pcolor_grad_corr = subplot(2,2,4);
-    handles.surface_pcolor_grad_corr = pcolor(chm.time-offset,chm.range,grad_corr);
+    handles.surface_pcolor_grad_corr = pcolor(chm.time-offset,range,grad_corr);
     xlims = [floor(chm.time(1))-offset, ceil(chm.time(end))-offset];
     xticks = xlims(1)-mod(mod(xlims(1),1)*24,dxticks)/24:dxticks/24:xlims(2);
     set(gca,'XLim',xlims,'XTick',xticks,'XMinorTick','on');
@@ -421,9 +450,11 @@ if nargs==6 || nargs==7 || nargs==8
     set(gca,'FontSize',fz);
 
     set(gcf,'PaperPositionMode','auto');
-
+%% saving
     if ~isempty(file_out)
-        print( '-dpng','-r150','-loose', file_out);
+%         saveas(gcf,file_out);
+                print( '-dpng','-r150','-loose', file_out);
+
         close;
     end
 

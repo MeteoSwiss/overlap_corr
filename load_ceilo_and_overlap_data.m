@@ -30,8 +30,8 @@ function [chm,chminfo,ov] = load_ceilo_and_overlap_data(stn,date_yyyymmdd)
             warning('no data found');return;
         end
     elseif strcmp(stn,'Granada')
-%         [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'C:\AllData\SharedData_Maxime\gr\');
-        [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],[root_stations_others,'CHM120107/']);
+        [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],'C:\DATA\Ceilometer\CHM15k\UGRceilometer\');
+%         [chm,chminfo] = readcorrectlyncfile3(stn,[date_yyyymmdd,'000000'],[date_yyyymmdd,'235959'],[root_stations_others,'CHM120107/']);
         if isempty(chm)
             warning('no data found');return;
         end

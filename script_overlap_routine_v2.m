@@ -1,5 +1,5 @@
 % Script To correct overlap functions
-% By Y. Poltera and M. Hervo (Meteoswiss) 2016
+% By Y. Poltera and M. Hervo (Meteoswiss) 2016-2019
 
 clear variables; close all; clc
 
@@ -7,8 +7,8 @@ clear variables; close all; clc
 
 stn = 'kse';
 
-start_time = datenum(2016,01,1);
-end_time = datenum(2017,12,31);
+start_time = datenum(2019,3,25);
+end_time = datenum(2020,11,1);
 
 %% List Of ceilometers previously studied
 stn_list = {'pay'                                ,'kse'      ,'SIRTA'    ,'Granada'  ,'Lindenberg','Hohenspeissenberg','Hamburg'  ,'Oslo'     };

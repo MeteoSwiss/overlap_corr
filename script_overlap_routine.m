@@ -22,7 +22,7 @@ stn = 'kse';
 % date_yyyymmdd = '20150524';
 
 
-for dn = datenum(2014,08,29):1:datenum(2015,12,15)
+for dn = datenum(2019,4,1):1:datenum(2019,5,22)
     date_yyyymmdd = datestr(dn,'yyyymmdd');
     
     [chm,chminfo,ov] = load_ceilo_and_overlap_data(stn,date_yyyymmdd);
