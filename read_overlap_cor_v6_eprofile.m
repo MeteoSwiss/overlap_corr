@@ -12,7 +12,7 @@ set(0,'DefaultFigureVisible','on')
 station = '0-20008-0-UGR';
 % station = '0-20000-0-03808';
 % station = '0-20008-0-INO';
-
+station = '0-20000-0-06348';
 %% INPUTS for each station
 switch station
     case '0-20000-0-10393'
@@ -123,6 +123,30 @@ switch station
         info_test.end_day  =  21;
         info_test.end_month=  3;
         info_test.end_year =  2020;
+        
+        list_dates_badquality = {};% not better than Lufft
+        
+         case '0-20000-0-06348'
+        %% Cabauw
+        id = 'A';
+        info.tub='TUB140015';
+        info.chm = 'TUB140015';
+        info.start_day  = 1;
+        info.start_month= 6;
+        info.start_year = 2016;
+        
+        info.end_day  =  31;
+        info.end_month=  6;
+        info.end_year =  2018;
+        
+        % Time range to apply the correction
+        info_test.start_day  = 4;
+        info_test.start_month= 6;
+        info_test.start_year = 2018;
+        
+        info_test.end_day  =  4;
+        info_test.end_month=  6;
+        info_test.end_year =  2018;
         
         list_dates_badquality = {};% not better than Lufft
         
@@ -285,7 +309,7 @@ if info_reloading == 1 || exist(['all_correction_' station '_' info.tub  suffix 
     ov_cell = textscan(fid, '%f','headerLines',1);fclose(fid);
     overlap_ref = cell2mat(ov_cell);
     if length(overlap_ref)~=length(range)
-        overlap_ref = interp1(0:14.984999:15344,overlap_ref,L1.range);
+        overlap_ref = interp1(0:14.984999:15344,overlap_ref,range);
         disp('Interpolating')
     end
     %         else
