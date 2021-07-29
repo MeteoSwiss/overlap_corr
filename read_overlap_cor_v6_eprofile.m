@@ -9,11 +9,35 @@ set(0,'DefaultFigureVisible','on')
 %% Main INPUT
 % station='0-20000-0-10393';
 % station='0-20000-0-16054';
-station = '0-20008-0-UGR';
+%station = '0-20008-0-UGR';
 % station = '0-20000-0-03808';
 % station = '0-20008-0-INO';
-station = '0-20000-0-06348';
+%station = '0-20000-0-06348';
+station = '0-20000-0-06610';
 %% INPUTS for each station
+switch station
+    case '0-20000-0-06610'
+        %% Payerne
+        info.start_day  = 4;
+        info.start_month= 3;
+        info.start_year = 2021;
+        
+        info.end_day  =  26;
+        info.end_month=  7;
+        info.end_year =  2021;
+        % Time range to apply the correction
+        info_test.start_day  = 3;
+        info_test.start_month= 4;
+        info_test.start_year = 2021;
+        
+        info_test.end_day  =  3;
+        info_test.end_month=  4;
+        info_test.end_year =  2021;
+        id = 'A';
+        info.tub='TUB200009';
+        info.chm = 'TUB200009';
+        list_dates_badquality = {'20210506'};% not better than Lufft
+
 switch station
     case '0-20000-0-10393'
         %% lindenberg
@@ -578,11 +602,9 @@ for j=1:find(range<=1200,1,'last')
         weights_fit(indx) = weights(l).^1;
     end
     
-    [fo,gof] = fit(x_fit,y_fit,'poly1');
-    a(j) = fo.p1(1);
-    b(j) = fo.p2(1);
-    r2(j) = gof.rsquare;
-    rmse(j) = gof.rmse;
+    fo = polyfit(x_fit,y_fit,1);
+    a(j) = fo(1);
+    b(j) = fo(2);
 end
 
 
