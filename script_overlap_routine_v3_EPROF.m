@@ -18,8 +18,12 @@ clear variables; close all; clc
 % id = '0';
 % % stn = '0-20008-0-INO';
 % % id = 'A';
-stn = '0-20000-0-06348';
-id = 'A';
+% %stn = '0-20000-0-06348';
+% %id = 'A';
+% stn = '0-20008-0-BRN';
+% id = 'A';
+  stn = '0-20000-0-06784'; 
+  id = 'A';
 
 start_time = datenum(2018,6,4);
 end_time = datenum(2018,6,28);

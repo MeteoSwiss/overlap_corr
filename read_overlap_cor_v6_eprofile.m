@@ -13,9 +13,55 @@ set(0,'DefaultFigureVisible','on')
 % station = '0-20000-0-03808';
 % station = '0-20008-0-INO';
 %station = '0-20000-0-06348';
-station = '0-20000-0-06610';
+%station = '0-20000-0-06610';
+% station = '0-20008-0-BRN';
+  station = '0-20000-0-06784';
 %% INPUTS for each station
 switch station
+     case '0-20000-0-06784'
+        %% Davos    REDO A CONFIG WITH MORE MONTHS IN THE FUTURE
+        info.start_day  = 1;
+        info.start_month= 7;
+        info.start_year = 2021;
+        
+        info.end_day  =  19;
+        info.end_month=  10;
+        info.end_year =  2021;
+        % Time range to apply the correction
+        info_test.start_day  = 9;
+        info_test.start_month= 8;
+        info_test.start_year = 2021;
+        
+        info_test.end_day  =  13;
+        info_test.end_month=  8;
+        info_test.end_year =  2021;
+        id = 'A';
+        info.tub='TUB120011';
+        info.chm = 'TUB120011';
+        list_dates_badquality = {};
+    case '0-20008-0-BRN'
+        %% Bern
+        info.start_day  = 14;
+        info.start_month= 6;
+        info.start_year = 2018;
+        
+        info.end_day  =  29;
+        info.end_month=  7;
+        info.end_year =  2021;
+        % Time range to apply the correction
+        info_test.start_day  = 28;
+        info_test.start_month= 5;
+        info_test.start_year = 2021;
+        
+        info_test.end_day  =  28;
+        info_test.end_month=  5;
+        info_test.end_year =  2021;
+        id = 'A';
+        info.tub='TUB150046';
+        info.chm = 'TUB150046';
+        list_dates_badquality = {'20190102','20190221','20190412','20190515','20190716','20190802','20190814',...
+                                '20200407','20200528','20200627','20210422'};
+
     case '0-20000-0-06610'
         %% Payerne
         info.start_day  = 4;
@@ -182,6 +228,10 @@ end
 
 
 %% other inputs
+%File paths
+folder_corrections =['C:/WorkMCH/PAY/stratfinder_external/overlap_correction/' station '/'];
+folder_output = folder_corrections;
+folder_ncdata = 'C:/WorkMCH/PAY/data/CHM15k_L1_E-PROFILES/';
 
 suffix = ''; %'' _after_moving_2017
 
@@ -195,15 +245,9 @@ info_reloading=1; %(Reload all data?)
 
 create_netcdf = 1;
 
-
-% folder_output =['../Outputs/' station '/'];
-folder_output =['D:\Projects\2018\201806 Start Finder Overlap/' station '/'];
-folder_results_algo = 'D:\Projects\2018\201806 Start Finder Overlap\';
-folder_corrections =['D:\Projects\2018\201806 Start Finder Overlap/' station '/'];
-
-folder_ov_ref = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
-
-folder_ncdata = 'G:\E_PROFILE_ALC\L1_FILES\';
+%folder_results_algo = 'D:\Projects\2018\201806 Start Finder Overlap\';
+%folder_ov_ref = 'M:\pay-data\data\pay\PBL4EMPA\overlap_correction\overlap_functions_Lufft\';
+%folder_ncdata = 'G:\E_PROFILE_ALC\L1_FILES\';
 
 corrections_to_analyze = 'good_enough';%{'all','good_enough','well_trusted'};
 
