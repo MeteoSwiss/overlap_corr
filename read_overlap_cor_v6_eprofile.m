@@ -15,7 +15,9 @@ set(0,'DefaultFigureVisible','on')
 %station = '0-20000-0-06348';
 %station = '0-20000-0-06610';
 % station = '0-20008-0-BRN';
-  station = '0-20000-0-06784';
+% station = '0-20000-0-06784';  
+station = '0-20008-0-MEL';
+  
 %% INPUTS for each station
 switch station
      case '0-20000-0-06784'
@@ -219,8 +221,31 @@ switch station
         
         list_dates_badquality = {};% not better than Lufft
         
+    case '0-20008-0-MEL'
+        %% Melpitz (TROPOS)
+        info.start_day  = 30;
+        info.start_month= 9;
+        info.start_year = 2020;
+        
+        info.end_day  =  9;
+        info.end_month=  12;
+        info.end_year =  2021;
+        % Time range to apply the correction
+        info_test.start_day  = 28;
+        info_test.start_month= 5;
+        info_test.start_year = 2021;
+        
+        info_test.end_day  =  28;
+        info_test.end_month=  5;
+        info_test.end_year =  2021;
+        id = 'A';
+        info.tub='TUB160061';
+        info.chm = 'TUB160061';
+        list_dates_badquality = {'20210915','20201207','20210221','20210715'};
+
+        
     otherwise
-        error('Define statoon info')
+        error('Define station info')
         list_dates_badquality = {};% not better than Lufft
         
 end
@@ -452,7 +477,7 @@ T = temp_mean-273.15;
 Treduced = (T-min(T))/(max(T)-min(T))*(length(jet)-1)+1;
 RGB = interp1(1:length(jet),jet,Treduced);
 
-figure('Name','fig 4')
+h_fig_all_ovl = figure('Name','fig 4');
 set(gcf,'DefaultAxesColorOrder',RGB)
 hold on;
 
@@ -1188,4 +1213,24 @@ for t=1:length(time_vec_test)
     if  length(time_vec_test) >5
         close all
     end
+end
+
+%% Add info for assisting selection to command line and fig 4 overview plot
+fprintf('\n\nDates of Minimum and maximum value in overlap function at 4 levels\n')
+fprintf('==================================================================\n\n')
+fprintf('    Lowest                 Highest\n')
+fprintf('    ------                 -------\n')
+figure(h_fig_all_ovl)
+hold all
+for range_act = 350:50:500
+    i_r = find(range<=range_act, 1, 'last');
+    ovl_act_r = overlap_cor(:, i_r);
+    [ovl_sorted, i_sort] = sort(ovl_act_r);
+    fprintf('Range %.0f m:\n', range(i_r))
+    for k = 1:5
+        fprintf('    %s (%0.3f)    %s (%0.3f)\n', ...
+            datestr(time(i_sort(k))), overlap_cor(i_sort(k), i_r), ...
+            datestr(time(i_sort(end-k+1))), overlap_cor(i_sort(end-k+1), i_r));
+    end
+    plot([1 1]*range(i_r), [ovl_sorted(1), ovl_sorted(end)], 's-r')
 end

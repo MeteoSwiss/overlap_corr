@@ -14,7 +14,7 @@ Repository for the overlap correction for CHM15k. This code was used for the pap
 * Gradient Analysis (read_gradient)
 
 
-## Detailed dexcription of standard way of using ##
+## Detailed description of standard way of using ##
 	1. script_overlap_routine_v3_EPROF.m
 		a. fill variables : 
 			* stn: wigos-id
@@ -33,7 +33,7 @@ Repository for the overlap correction for CHM15k. This code was used for the pap
 			* optical module id (info.tub) and instrument serial number (info.chm). You'll find this information in daily netcdf files attributes.
 		c. run script             
 		d. filter bad quality overlap estimates
-			* identify in plots bad quality dates (best done in Matlab figure by opening >view>plot browser)
+			* identify in plots bad quality dates by using the overlap function vs range plot (Figure 2: fig 4) and the dates indicated in the command line output
 			* add these bad days to list_dates_bad_quality in the station switch
 		e. run script again
 

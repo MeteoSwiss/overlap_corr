@@ -22,15 +22,17 @@ clear variables; close all; clc
 % %id = 'A';
 % stn = '0-20008-0-BRN';
 % id = 'A';
-  stn = '0-20000-0-06784'; 
-  id = 'A';
+%   stn = '0-20000-0-06784'; 
+%   id = 'A';
+stn = '0-20008-0-MEL';
+id = 'A';
 
-start_time = datenum(2018,6,4);
-end_time = datenum(2018,6,28);
+start_time = datenum(2020,9,30);
+end_time = datenum(2021,12,9);
 
 
-folder_data = 'G:\E_PROFILE_ALC\L1_FILES\';
-foulder_out = 'D:\Projects\2018\201806 Start Finder Overlap/';
+folder_data = 'C:/DATA/overlap_tmp/infiles/';
+foulder_out = 'C:/DATA/overlap_tmp/overlap_correction/';
 
 
 %% Loop on time
