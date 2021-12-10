@@ -18,6 +18,7 @@ Repository for the overlap correction for CHM15k. This code was used for the pap
 	1. script_overlap_routine_v3_EPROF.m
 		a. fill variables : 
 			* stn: wigos-id
+			* start_time/end_time: time period for which to calculate overlap correction
 			* folder_data : location of E-PROFILE netCDF level 1 files   (NOTE: you'll prefer to transfer ncdf files directly on your machine to improve execution speed (locally ~12hours/1year of data))
 			* folder_out :  output directory   (NOTE: prefer a local directory on your machine for speed)
 		b. run script                              
