@@ -14,6 +14,28 @@ Repository for the overlap correction for CHM15k. This code was used for the pap
 * Gradient Analysis (read_gradient)
 
 
+## Detailed dexcription of standard way of using ##
+1. script_overlap_routine_v3_EPROF.m
+	a. fill variables : 
+		* stn: wigos-id
+		* folder_data : location of E-PROFILE netCDF level 1 files   (NOTE: you'll prefer to transfer ncdf files directly on your machine to improve execution speed (locally ~12hours/1year of data))
+		* folder_out :  output directory   (NOTE: prefer a local directory on your machine for speed)
+	b. run script                              
+2. read_overlap_cor_v6_eprofile.m
+	a. fill variables:
+		* station: wigos-id
+		* folder_ncdata:  location of E-PROFILE netCDF level 1 files
+		* folder_correction:  File path of the output created by script_overlap_routine_v3_EPROF.m in step 2)
+		* folder_output: output directory  (NOTE: prefer a local directory for speed)
+	b. If you are configuring a new station add a case in the station inputs switch. Then specify:
+		* timerange of the correction files (in info.xxx) + timerange of daily correction visualization for actually testing the correction on measured profiles (in info_test.xxx).
+		* optical module id (info.tub) and instrument serial number (info.chm). You'll find this information in daily netcdf files attributes.
+	c. run script             
+	d. filter bad quality overlap estimates
+		* identify in plots bad quality dates (best done in Matlab figure by opening >view>plot browser)
+		* add these bad days to list_dates_bad_quality in the station switch
+	e. run script again
+
 
 ## Examples ##
 ### Raw ###

@@ -21,7 +21,7 @@ switch station
      case '0-20000-0-06784'
         %% Davos    REDO A CONFIG WITH MORE MONTHS IN THE FUTURE
         info.start_day  = 1;
-        info.start_month= 7;
+        info.start_month= 8;
         info.start_year = 2021;
         
         info.end_day  =  19;
@@ -38,7 +38,7 @@ switch station
         id = 'A';
         info.tub='TUB120011';
         info.chm = 'TUB120011';
-        list_dates_badquality = {};
+        list_dates_badquality = {'20210915'};
     case '0-20008-0-BRN'
         %% Bern
         info.start_day  = 14;
@@ -84,7 +84,6 @@ switch station
         info.chm = 'TUB200009';
         list_dates_badquality = {'20210506'};% not better than Lufft
 
-switch station
     case '0-20000-0-10393'
         %% lindenberg
         info.start_day  = 1;
@@ -229,9 +228,9 @@ end
 
 %% other inputs
 %File paths
-folder_corrections =['C:/WorkMCH/PAY/stratfinder_external/overlap_correction/' station '/'];
+folder_corrections =['C:/DATA/overlap_tmp/overlap_correction/' station '/'];
 folder_output = folder_corrections;
-folder_ncdata = 'C:/WorkMCH/PAY/data/CHM15k_L1_E-PROFILES/';
+folder_ncdata = 'C:/DATA/overlap_tmp/infiles/';
 
 suffix = ''; %'' _after_moving_2017
 
@@ -367,7 +366,7 @@ if info_reloading == 1 || exist(['all_correction_' station '_' info.tub  suffix 
     end
     
     %% Read: overlap correction and scaling in cfg file
-    list = dir([folder_ov_ref,info.tub,'_*.cfg']);
+    % list = dir([folder_ov_ref,info.tub,'_*.cfg']);
     %     if isempty(list)
     %         answer=questdlg({'No reference overlap function found','Do you want to calibrate with TUB120011 overlap function'},...
     %             'No reference overlap function','Yes','No','No');
@@ -1186,7 +1185,7 @@ for t=1:length(time_vec_test)
             end
         end
     end
-    if  length(time_vec_test) >2
+    if  length(time_vec_test) >5
         close all
     end
 end
