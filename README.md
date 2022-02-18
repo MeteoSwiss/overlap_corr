@@ -1,6 +1,6 @@
 # Overlap correction algorithm #
 
-Repository for the overlap correction for CHM15k. This code was used for the paper submitted in AMT.
+Algorithms for inferring overlap correction for (CHM15k) ceilometers from atmospheric observations under well-mixed boundary layer conditions. Based on Hervo et al. 2016 (https://doi.org/10.5194/amt-9-2947-2016)
 
 
 ## Content ##
